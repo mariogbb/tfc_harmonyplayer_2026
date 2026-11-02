@@ -1,0 +1,40 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    // Some older Flutter plugins still declare their namespace only in the
+    // manifest. AGP 8+ requires it in the Android extension instead.
+    pluginManager.withPlugin('com.android.library') {
+        def android = extensions.getByName('android')
+        if (!android.namespace) {
+            def manifest = file('src/main/AndroidManifest.xml')
+            if (manifest.exists()) {
+                def match = manifest.text =~ /\bpackage\s*=\s*["']([^"']+)["']/
+                if (match.find()) {
+                    android.namespace = match.group(1)
+                }
+            }
+        }
+    }
+}
+subprojects {
+    afterEvaluate {
+        if (plugins.hasPlugin('com.android.library')) {
+            android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+            android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
+        }
+    }
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions.jvmTarget = '17'
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

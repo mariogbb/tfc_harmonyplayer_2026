@@ -1,0 +1,44 @@
+version: v0.3.73
+Fixed bug when switching device rotation
+version: v0.3.72
+Removed unused entry on settings
+Changed translation of look and feel and about page on spanish
+Fixed bug that prevented loading songs
+version: v0.3.71
+Fixed bug with song loading
+version: v0.3.7
+Added italian support
+Added option to display song duration
+Better animation for playing screen
+Fixed bugs relating app permissions
+version: v0.3.6
+Better theming
+Improved landscape UI
+Fixed bugs on player service
+version: v0.3.5
+Better app stability
+Added new animations
+version: v0.3.4
+Improved songs tab, albums tab and playlist tab UI
+Better color theming for appbar on dark mode
+Improved overall performance
+Reworked album and artist screen
+version: v0.3.3
+Added language locale setting
+Added user name switcher
+Added gallaecian locale
+Fixed bugs related to currently playing screen
+version: v0.3.2
+Improved main menu screen
+Added top played songs chart
+Added bottom tab color theming
+Added control tab color theming
+version: v0.3.1
+Added theming settings for AppBar, artworks and accent color
+Added top played albums chart on main menu
+Added more l10n
+Added changelog
+Fixed bugs
+version: v0.3.0
+Added settings
+Added customization
