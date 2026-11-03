@@ -24,6 +24,24 @@ are listed using their filenames and have unknown durations. Firebase and system
 media integration are not initialized on Linux, and desktop artwork currently
 uses a placeholder.
 
+### Debian/Ubuntu package
+
+On Debian/Ubuntu, build the package on the oldest distribution release you plan
+to support (the generated binary dependencies reflect the build machine):
+
+```sh
+sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libsqlite3-dev dpkg-dev
+flutter pub get
+linux/packaging/build-deb.sh
+```
+
+This creates `build/harmony-player_<version>_<architecture>.deb`. Install it
+using `apt` rather than `dpkg -i`, so runtime dependencies are resolved:
+
+```sh
+sudo apt install ./build/harmony-player_<version>_<architecture>.deb
+```
+
 ## Windows development
 
 On Windows, install the Flutter Windows desktop prerequisites and run
