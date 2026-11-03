@@ -14,6 +14,6 @@ jobs:
           flutter-version: "3.47.4"
           cache: true
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed lib/app lib/main.dart test
+      - run: dart format --output=none --set-exit-if-changed lib/app lib/data/services lib/main.dart test
       - run: flutter analyze
       - run: flutter test

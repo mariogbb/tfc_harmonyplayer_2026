@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
+import 'package:player/data/services/music_library/desktop_music_library_service.dart';
+import 'package:player/data/services/music_library/platform_music_library_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Initializes platform services and returns whether to show the welcome screen.
@@ -23,6 +25,11 @@ Future<bool> bootstrap() async {
   final showWelcome = await initializeWelcomePreference(prefs);
 
   await PlayerDatabase.instance.initState();
+  PlayerData.instance.configureMusicLibrary(
+    Platform.isLinux || Platform.isWindows
+        ? DesktopMusicLibraryService()
+        : PlatformMusicLibraryService(),
+  );
   await PlayerData.instance.initHandler();
   return showWelcome;
 }
