@@ -11,6 +11,8 @@ import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/repositories/artwork_repository.dart';
+import 'package:player/data/services/artwork/local_artwork_service.dart';
 
 class PlayerData extends ChangeNotifier {
   static final PlayerData _playerData = PlayerData.internal();
@@ -22,6 +24,9 @@ class PlayerData extends ChangeNotifier {
   late final List<PlaylistData> playlists = [];
   late final PlayerHandler handler;
   late MusicLibraryRepository _musicLibrary;
+  late ArtworkRepository _artworkRepository;
+  late LocalArtworkService _localArtwork;
+  bool _disposed = false;
 
   factory PlayerData() {
     return _playerData;
@@ -33,6 +38,17 @@ class PlayerData extends ChangeNotifier {
 
   void configureMusicLibrary(MusicLibraryRepository musicLibrary) {
     _musicLibrary = musicLibrary;
+  }
+
+  void configureArtwork(ArtworkRepository artwork, LocalArtworkService local) {
+    _artworkRepository = artwork;
+    _localArtwork = local;
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   // Init state
@@ -119,8 +135,13 @@ class PlayerData extends ChangeNotifier {
         defaultValue: 0,
       )!.toInt(),
     );
-    for (final album in library.albums) {
-      albumList.add(AlbumData(album));
+    final localArtwork = await Future.wait(
+      library.albums.map((album) => _localArtwork.loadAlbumArtwork(album.id)),
+    );
+    for (var i = 0; i < library.albums.length; i++) {
+      final album = AlbumData(library.albums[i], artwork: localArtwork[i]);
+      albumList.add(album);
+      unawaited(_loadAlbumUrl(album));
     }
 
     for (final song in library.songs) {
@@ -139,7 +160,23 @@ class PlayerData extends ChangeNotifier {
     }
 
     for (final model in library.artists) {
-      artistList.add(ArtistData(model));
+      final artist = ArtistData(model);
+      artistList.add(artist);
+      unawaited(_loadArtistUrl(artist));
     }
+  }
+
+  Future<void> _loadAlbumUrl(AlbumData album) async {
+    final url = await _artworkRepository.albumUrl(album.id, album.name);
+    if (_disposed || !albumList.contains(album)) return;
+    album.imageURL = url;
+    if (url != null) notifyListeners();
+  }
+
+  Future<void> _loadArtistUrl(ArtistData artist) async {
+    final url = await _artworkRepository.artistUrl(artist.id, artist.name);
+    if (_disposed || !artistList.contains(artist)) return;
+    artist.imageURL = url;
+    if (url != null) notifyListeners();
   }
 }

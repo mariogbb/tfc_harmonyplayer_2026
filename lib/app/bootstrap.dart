@@ -6,9 +6,14 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:http/http.dart' as http;
 import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
+import 'package:player/data/repositories/artwork_repository.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/services/artwork/database_artwork_cache.dart';
+import 'package:player/data/services/artwork/deezer_artwork_service.dart';
+import 'package:player/data/services/artwork/local_artwork_service.dart';
 import 'package:player/data/services/music_library/desktop_music_library_service.dart';
 import 'package:player/data/services/music_library/platform_music_library_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +39,13 @@ Future<bool> bootstrap() async {
       service: musicService,
       loadPlayedTime: PlayerDatabase.instance.getSongPlayedTime,
     ),
+  );
+  PlayerData.instance.configureArtwork(
+    ArtworkRepository(
+      cache: DatabaseArtworkCache(PlayerDatabase.instance),
+      search: DeezerArtworkService(http.Client()),
+    ),
+    LocalArtworkService(),
   );
   await PlayerData.instance.initHandler();
   return showWelcome;

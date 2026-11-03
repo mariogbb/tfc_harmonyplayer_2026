@@ -1,8 +1,6 @@
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:player/model/album.dart';
-import 'package:player/model/artist.dart';
 import 'package:player/data/data.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/model/ranking.dart';
@@ -61,20 +59,6 @@ class PlayerDatabase {
 
   PlayerDatabase.internal();
 
-  void saveAlbumArtwork(AlbumData album, String url) {
-    try {
-      database.insert("ALBUMS", {"ID": "${album.id}", "URL": url},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (_) {}
-  }
-
-  void saveArtistArtwork(ArtistData artist, String url) {
-    try {
-      database.insert("ARTISTS", {"ID": "${artist.id}", "URL": url},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (_) {}
-  }
-
   Future<bool> findSongInDatabase(int id) async {
     bool out = false;
 
@@ -111,36 +95,6 @@ class PlayerDatabase {
     } catch (_) {}
 
     return out;
-  }
-
-  Future<String?> loadAlbumArtwork(AlbumData data) async {
-    String? url;
-
-    try {
-      List<Map> result = await database.query("ALBUMS",
-          columns: ["URL"], where: "ID = ?", whereArgs: [data.id.toString()]);
-
-      if (result.first["URL"] != null) {
-        url = result.first["URL"];
-      }
-    } catch (_) {}
-
-    return url;
-  }
-
-  Future<String?> loadArtistUrl(ArtistData data) async {
-    String? url;
-
-    try {
-      List<Map> result = await database.query("ARTISTS",
-          columns: ["URL"], where: "ID = ?", whereArgs: [data.id.toString()]);
-
-      if (result.first["URL"] != null) {
-        url = result.first["URL"];
-      }
-    } catch (_) {}
-
-    return url;
   }
 
   Future<List<Ranking>> loadRankings() async {
