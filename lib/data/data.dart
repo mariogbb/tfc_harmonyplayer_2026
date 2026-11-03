@@ -139,7 +139,12 @@ class PlayerData extends ChangeNotifier {
       library.albums.map((album) => _localArtwork.loadAlbumArtwork(album.id)),
     );
     for (var i = 0; i < library.albums.length; i++) {
-      final album = AlbumData(library.albums[i], artwork: localArtwork[i]);
+      final album = AlbumData(
+        library.albums[i],
+        artwork: localArtwork[i],
+        songs: songList,
+        artists: artistList,
+      );
       albumList.add(album);
       unawaited(_loadAlbumUrl(album));
     }
@@ -154,13 +159,14 @@ class PlayerData extends ChangeNotifier {
             model: song.model,
             albumModel: album,
             playedTime: song.playedTime,
+            artists: artistList,
           ),
         );
       } catch (_) {}
     }
 
     for (final model in library.artists) {
-      final artist = ArtistData(model);
+      final artist = ArtistData(model, albums: albumList, songs: songList);
       artistList.add(artist);
       unawaited(_loadArtistUrl(artist));
     }

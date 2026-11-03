@@ -2,13 +2,14 @@ import 'dart:typed_data';
 
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/model/artist.dart';
-import 'package:player/data/data.dart';
 import 'package:player/model/song.dart';
 
 class AlbumData {
   final Uint8List artwork;
   String? imageURL;
   AlbumModel model;
+  final List<SongData> _songs;
+  final List<ArtistData> _artists;
 
   String get name => model.album;
   String get artist => model.artist.toString();
@@ -18,7 +19,13 @@ class AlbumData {
   Duration get duration => _getDuration();
   Duration get playedTime => _getPlayedTime();
 
-  AlbumData(this.model, {required this.artwork, this.imageURL});
+  AlbumData(
+    this.model, {
+    required this.artwork,
+    required this._songs,
+    required this._artists,
+    this.imageURL,
+  });
 
   Duration _getPlayedTime() {
     Duration out = Duration.zero;
@@ -41,14 +48,12 @@ class AlbumData {
   }
 
   List<SongData> _getSongs() {
-    return PlayerData().songList
+    return _songs
         .where((element) => element.albumModel.id == model.id)
         .toList();
   }
 
   ArtistData _getArtist() {
-    return PlayerData().artistList.firstWhere(
-      (element) => element.id == model.artistId!,
-    );
+    return _artists.firstWhere((element) => element.id == model.artistId!);
   }
 }
