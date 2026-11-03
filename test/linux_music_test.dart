@@ -33,20 +33,27 @@ void main() {
     expect(songs.single.duration, greaterThan(0));
   });
 
-  test('finds music recursively with stable IDs and ignores other files',
-      () async {
-    final root = await Directory.systemTemp.createTemp('harmony_music_test_');
-    addTearDown(() => root.delete(recursive: true));
-    final nested = await Directory(path.join(root.path, 'album')).create();
-    await File(path.join(nested.path, 'Song.MP3')).writeAsBytes([0, 1, 2]);
-    await File(path.join(root.path, 'notes.txt')).writeAsString('not music');
-    final library = LinuxMusicLibrary();
-    final first = await library.scan(root.path);
-    final second = await library.scan(root.path);
-    expect(first, hasLength(1));
-    expect(first.single.title, 'Song');
-    expect(first.single.data, path.join(nested.path, 'Song.MP3'));
-    expect(first.single.id, second.single.id);
-    expect(await library.scan(path.join(root.path, 'missing')), isEmpty);
-  });
+  test(
+    'finds music recursively with stable IDs and ignores other files',
+    () async {
+      final root = await Directory.systemTemp.createTemp('harmony_music_test_');
+
+      addTearDown(() => root.delete(recursive: true));
+
+      final nested = await Directory(path.join(root.path, 'album')).create();
+
+      await File(path.join(nested.path, 'Song.MP3')).writeAsBytes([0, 1, 2]);
+      await File(path.join(root.path, 'notes.txt')).writeAsString('not music');
+
+      final library = LinuxMusicLibrary();
+      final first = await library.scan(root.path);
+      final second = await library.scan(root.path);
+
+      expect(first, hasLength(1));
+      expect(first.single.title, 'Song');
+      expect(first.single.data, path.join(nested.path, 'Song.MP3'));
+      expect(first.single.id, second.single.id);
+      expect(await library.scan(path.join(root.path, 'missing')), isEmpty);
+    },
+  );
 }

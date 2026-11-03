@@ -1,19 +1,18 @@
-# player
+# Harmony Player
 
-A new Flutter project.
+A Flutter music player for local libraries. Android is the original target;
+Linux and Windows have desktop implementations that still need full implementation of
+the media player calls.
 
-## Getting Started
+## Development checks
 
-This project is a starting point for a Flutter application.
+```sh
+flutter pub get
+dart format --output=none --set-exit-if-changed lib/app lib/main.dart test
+flutter analyze
+flutter test
+```
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
 ## Linux development
 
 Install the development packages `libgstreamer1.0-dev`,
