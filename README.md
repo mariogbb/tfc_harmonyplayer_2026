@@ -8,7 +8,7 @@ the media player calls.
 
 ```sh
 flutter pub get
-dart format --output=none --set-exit-if-changed lib/app lib/control/playback_queue.dart lib/data/repositories lib/data/services lib/main.dart test
+dart format --output=none --set-exit-if-changed lib/app lib/control/playback_queue.dart lib/data/repositories lib/data/services lib/ui/welcome lib/main.dart test
 flutter analyze
 flutter test
 ```

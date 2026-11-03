@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class WelcomeEntry extends StatelessWidget {
-  const WelcomeEntry(
-      {Key? key,
-      required this.title,
-      required this.description,
-      required this.imageAsset,
-      this.optionalWidget})
-      : super(key: key);
+  const WelcomeEntry({
+    Key? key,
+    required this.title,
+    required this.description,
+    required this.imageAsset,
+    this.optionalWidget,
+  }) : super(key: key);
 
   final String title;
   final String description;
@@ -49,10 +49,11 @@ class WelcomeEntry extends StatelessWidget {
                   Text(
                     description,
                     style: const TextStyle(
-                        color: Colors.grey,
-                        letterSpacing: 1.2,
-                        fontSize: 16.0,
-                        height: 1.3),
+                      color: Colors.grey,
+                      letterSpacing: 1.2,
+                      fontSize: 16.0,
+                      height: 1.3,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   if (optionalWidget != null) ...[

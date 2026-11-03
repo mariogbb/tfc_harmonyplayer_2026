@@ -9,7 +9,7 @@ import 'package:player/layout/adaptive_layout.dart';
 import 'package:player/control/control_tab.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
-import 'package:player/screens/welcome_screen/welcome_screen.dart';
+import 'package:player/ui/welcome/welcome_screen.dart';
 import 'package:player/tabs/albums/albums_tab.dart';
 import 'package:player/tabs/artists/artists_tab.dart';
 import 'package:player/tabs/menu/menu_tab.dart';
