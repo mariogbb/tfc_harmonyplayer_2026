@@ -4,7 +4,7 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/settings.dart';
 import 'package:player/theme_data/theme_provider.dart';
 import 'package:player/theme_data/top_bar_theme.dart';
-import 'package:player/widgets/generic_artwork.dart';
+import 'package:player/ui/core/generic_artwork.dart';
 import 'package:provider/provider.dart';
 
 class LookAndFeelScreen extends StatefulWidget {

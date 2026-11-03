@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:player/dialogs/changelog_dialogs.dart';
+import 'package:player/ui/settings/about_screen/changelog_dialogs.dart';
 import 'package:player/l10n/app_localizations.dart';
-import 'package:player/dialogs/contact_dialog.dart';
+import 'package:player/ui/settings/about_screen/contact_dialog.dart';
 
 class AboutAppScreen extends StatelessWidget {
   const AboutAppScreen({Key? key}) : super(key: key);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:player/widgets/generic_artwork.dart';
+import 'package:player/ui/core/generic_artwork.dart';
 
 class PlayingScreenSettings extends StatefulWidget {
   const PlayingScreenSettings({Key? key}) : super(key: key);
