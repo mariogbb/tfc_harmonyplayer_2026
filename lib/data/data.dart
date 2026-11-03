@@ -2,18 +2,18 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
-import 'package:player/data/dao.dart';
-import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/control/media_control.dart';
-import 'package:player/data/linux_music.dart';
+import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/repositories/artwork_repository.dart';
+import 'package:player/data/repositories/playlist_repository.dart';
+import 'package:player/data/services/artwork/local_artwork_service.dart';
+import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:player/ui/library/library_controller.dart';
 
 class PlayerData extends ChangeNotifier {
   static final PlayerData _playerData = PlayerData.internal();
@@ -22,8 +22,15 @@ class PlayerData extends ChangeNotifier {
   late final List<SongData> songList = [];
   late final List<AlbumData> albumList = [];
   late final List<ArtistData> artistList = [];
-  late final List<PlaylistData> playlists = [];
   late final PlayerHandler handler;
+  late MusicLibraryRepository _musicLibrary;
+  late ArtworkRepository _artworkRepository;
+  late LocalArtworkService _localArtwork;
+  LibraryController? _libraryController;
+  LibraryController get libraryController => _libraryController!;
+  PlaylistController? _playlistController;
+  PlaylistController get playlistController => _playlistController!;
+  bool _disposed = false;
 
   factory PlayerData() {
     return _playerData;
@@ -32,6 +39,43 @@ class PlayerData extends ChangeNotifier {
   static PlayerData get instance => _playerData;
 
   PlayerData.internal();
+
+  void configureMusicLibrary(MusicLibraryRepository musicLibrary) {
+    _musicLibrary = musicLibrary;
+  }
+
+  void configureArtwork(ArtworkRepository artwork, LocalArtworkService local) {
+    _artworkRepository = artwork;
+    _localArtwork = local;
+    _libraryController?.removeListener(_onLibraryChanged);
+    _libraryController?.dispose();
+    _libraryController = LibraryController(
+      repository: _musicLibrary,
+      artworkRepository: _artworkRepository,
+      localArtwork: _localArtwork,
+      songs: songList,
+      albums: albumList,
+      artists: artistList,
+    )..addListener(_onLibraryChanged);
+  }
+
+  void _onLibraryChanged() {
+    if (!_disposed) notifyListeners();
+  }
+
+  void configurePlaylists(PlaylistRepository repository) {
+    _playlistController?.dispose();
+    _playlistController = PlaylistController(repository);
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _libraryController?.removeListener(_onLibraryChanged);
+    _libraryController?.dispose();
+    _playlistController?.dispose();
+    super.dispose();
+  }
 
   // Init state
   Future<void> initHandler() async {
@@ -52,161 +96,29 @@ class PlayerData extends ChangeNotifier {
     );
   }
 
-  void initState() async {
-    songList.clear();
-    albumList.clear();
-    artistList.clear();
-    playlists.clear();
-
-    await loadSongs();
-    List<PlaylistData> loadedPlaylists = await PlayerDatabase().loadPlaylists();
-
-    loadedPlaylists.forEach(playlists.add);
-    notifyListeners();
-  }
-
-  Future<PlaylistData?> createPlaylist(String name) async {
-    PlaylistData? newPlaylist;
-
-    if (playlists.where((element) => element.name == name).isEmpty) {
-      newPlaylist = await PlayerDatabase.instance.createPlaylist(name);
-
-      if (newPlaylist != null) {
-        playlists.add(newPlaylist);
-      }
-    }
-
-    notifyListeners();
-
-    return newPlaylist;
-  }
-
-  Future<void> removeSongFromPlaylist(
-      PlaylistData playlist, SongData data) async {
-    if (playlist.songs.contains(data)) {
-      playlist.songs.remove(data);
-      notifyListeners();
+  Future<void> initState() async {
+    try {
+      if (await loadSongs()) await _playlistController!.load(songList);
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'music initialization',
+        ),
+      );
+      if (!_disposed) libraryController.reportFailure(error);
     }
   }
 
-  Future<void> addSongToPlaylist(PlaylistData playlist, SongData data) async {
-    if (!playlist.songs.contains(data)) {
-      playlist.songs.add(data);
-      notifyListeners();
-    }
-  }
-
-  void renamePlaylist(String newName, PlaylistData playlist) {}
-
-  void deletePlaylist(PlaylistData playlist) async {
-    await PlayerDatabase.instance.removePlaylistFromDatabase(playlist);
-    playlists.remove(playlist);
-    notifyListeners();
-  }
-
-  Future loadSongs() async {
-    if (Platform.isLinux || Platform.isWindows) {
-      final library = LinuxMusicLibrary();
-      final directory = await library.musicDirectory();
-      if (directory == null) return;
-      final songs = await library.scan(directory);
-      for (final song in songs) {
-        if (Settings.getValue<bool>('smartFilterEnabled',
-                defaultValue: true)! &&
-            song.title.startsWith('AUD')) {
-          continue;
-        }
-        if (song.duration! <
-            Settings.getValue<double>('filterDuration', defaultValue: 0)!
-                    .toInt() *
-                1000) {
-          continue;
-        }
-        if (!artistList.any((artist) => artist.id == song.artistId)) {
-          artistList.add(ArtistData(ArtistModel({
-            '_id': song.artistId,
-            'artist': song.artist,
-          })));
-        }
-        var albums = albumList.where((album) => album.id == song.albumId);
-        if (albums.isEmpty) {
-          albumList.add(AlbumData(AlbumModel({
-            '_id': song.albumId,
-            'album': song.album,
-            'artist': song.artist,
-            'artist_id': song.artistId,
-            'numsongs': 0,
-          })));
-          albums = albumList.where((album) => album.id == song.albumId);
-        }
-        final playedTime =
-            await PlayerDatabase.instance.getSongPlayedTime(song.id);
-        songList.add(SongData(
-            model: song, albumModel: albums.first, playedTime: playedTime));
-      }
-      return;
-    }
-    if (await Permission.storage.isDenied) {
-      return;
-    }
-
-    Trace songTrace = FirebasePerformance.instance.newTrace("song-load");
-
-    await songTrace.start();
-
-    var query = OnAudioQuery();
-
-    List<AlbumModel> albumInfo = await query.queryAlbums();
-
-    for (AlbumModel album in albumInfo) {
-      albumList.add(AlbumData(album));
-    }
-
-    List<SongModel> info = await query.querySongs();
-
-    songTrace.setMetric("song_number", info.length);
-
-    for (SongModel song in info) {
-      try {
-        if (Settings.getValue<bool>("smartFilterEnabled",
-                defaultValue: true)! &&
-            song.title.startsWith("AUD")) {
-          continue;
-        }
-
-        if (song.duration! <
-            (Settings.getValue<double>("filterDuration", defaultValue: 0)!
-                    .toInt() *
-                1000)) {
-          continue;
-        }
-
-        AlbumData album =
-            albumList.firstWhere((element) => element.id == song.albumId!);
-
-        bool isSongOnDatabase =
-            await PlayerDatabase.instance.findSongInDatabase(song.id);
-
-        Duration playedTime = Duration.zero;
-
-        if (isSongOnDatabase) {
-          playedTime = await PlayerDatabase.instance.getSongPlayedTime(song.id);
-        }
-
-        songList.add(
-            SongData(model: song, albumModel: album, playedTime: playedTime));
-      } catch (_) {}
-    }
-
-    List<ArtistModel> artistInfo = await query.queryArtists();
-
-    for (ArtistModel model in artistInfo) {
-      artistList.add(ArtistData(model));
-    }
-
-    albumList.retainWhere((element) => element.songList.isNotEmpty);
-    artistList.retainWhere((element) => element.albumList.isNotEmpty);
-
-    await songTrace.stop();
-  }
+  Future<bool> loadSongs() => libraryController.load(
+    smartFilterEnabled: Settings.getValue<bool>(
+      'smartFilterEnabled',
+      defaultValue: true,
+    )!,
+    minimumDurationSeconds: Settings.getValue<double>(
+      'filterDuration',
+      defaultValue: 0,
+    )!.toInt(),
+  );
 }

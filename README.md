@@ -1,19 +1,18 @@
-# player
+# Harmony Player
 
-A new Flutter project.
+A Flutter music player for local libraries. Android is the original target;
+Linux and Windows have desktop implementations that still need full implementation of
+the media player calls.
 
-## Getting Started
+## Development checks
 
-This project is a starting point for a Flutter application.
+```sh
+flutter pub get
+dart format --output=none --set-exit-if-changed lib/app lib/control lib/data/dao.dart lib/data/repositories lib/data/services lib/ui lib/main.dart test
+flutter analyze
+flutter test
+```
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
 ## Linux development
 
 Install the development packages `libgstreamer1.0-dev`,
@@ -24,6 +23,24 @@ make `ffprobe` available for metadata and duration detection. Without it, files
 are listed using their filenames and have unknown durations. Firebase and system
 media integration are not initialized on Linux, and desktop artwork currently
 uses a placeholder.
+
+### Debian/Ubuntu package
+
+On Debian/Ubuntu, build the package on the oldest distribution release you plan
+to support (the generated binary dependencies reflect the build machine):
+
+```sh
+sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libsqlite3-dev dpkg-dev
+flutter pub get
+linux/packaging/build-deb.sh
+```
+
+This creates `build/harmony-player_<version>_<architecture>.deb`. Install it
+using `apt` rather than `dpkg -i`, so runtime dependencies are resolved:
+
+```sh
+sudo apt install ./build/harmony-player_<version>_<architecture>.deb
+```
 
 ## Windows development
 

@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -380,4 +381,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pick_a_color => 'Pick a color';
+
+  @override
+  String get library_load_error =>
+      'Unable to load the music library. Try reloading.';
+
+  @override
+  String get library_permission_error =>
+      'Music access was denied. Allow it in system settings, then reload.';
+
+  @override
+  String get playlist_load_error =>
+      'Unable to update playlists. Try reloading.';
+
+  @override
+  String get playback_error => 'Playback failed. Please try again.';
+
+  @override
+  String get startup_error =>
+      'Harmony Player could not start. Close and reopen the app. If the problem persists, check its configuration and storage access.';
 }

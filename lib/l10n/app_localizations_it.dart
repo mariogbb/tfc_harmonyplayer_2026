@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -385,4 +386,23 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pick_a_color => 'Scegliere un colore';
+
+  @override
+  String get library_load_error =>
+      'Impossibile caricare la libreria musicale. Prova a ricaricare.';
+
+  @override
+  String get library_permission_error =>
+      'Accesso alla musica negato. Consentilo nelle impostazioni di sistema e ricarica.';
+
+  @override
+  String get playlist_load_error =>
+      'Impossibile aggiornare le playlist. Prova a ricaricare.';
+
+  @override
+  String get playback_error => 'Riproduzione non riuscita. Riprova.';
+
+  @override
+  String get startup_error =>
+      'Impossibile avviare Harmony Player. Chiudi e riapri l\'app. Se il problema persiste, controlla la configurazione e l\'accesso alla memoria.';
 }

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Harmony Player
+Comment=Play music from your local library
+Exec=harmony-player
+Icon=harmony-player
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+StartupWMClass=dev.mariobesada.player

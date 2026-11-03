@@ -1,13 +1,13 @@
 import 'dart:typed_data';
-import 'package:on_audio_query/on_audio_query.dart';
+
+import 'package:player/model/library_metadata.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
-import 'package:player/data/data.dart';
 
 class SongData {
-  final SongModel model;
+  final SongMetadata model;
   final AlbumData albumModel;
-  final PlayerData playerData = PlayerData();
+  final List<ArtistData> _artists;
   Duration playedTime;
 
   String get title => model.title;
@@ -19,13 +19,14 @@ class SongData {
   Uint8List get artwork => albumModel.artwork;
   ArtistData get artistModel => _getArtist();
 
-  SongData(
-      {required this.model,
-      required this.albumModel,
-      required this.playedTime});
+  SongData({
+    required this.model,
+    required this.albumModel,
+    required this.playedTime,
+    required this._artists,
+  });
 
   ArtistData _getArtist() {
-    return playerData.artistList
-        .firstWhere((element) => element.id == model.artistId!);
+    return _artists.firstWhere((element) => element.id == model.artistId!);
   }
 }
