@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
 import 'package:player/model/song.dart';
+import 'package:player/model/library_metadata.dart';
 
 void main() {
   test('library models use injected lists for relationships and totals', () {
@@ -12,26 +12,26 @@ void main() {
     final albums = <AlbumData>[];
     final artists = <ArtistData>[];
     final album = AlbumData(
-      AlbumModel({'_id': 1, 'album': 'Album', 'artist_id': 2, 'numsongs': 1}),
+      const AlbumMetadata(id: 1, album: 'Album', artistId: 2),
       artwork: Uint8List.fromList([1, 2]),
       songs: songs,
       artists: artists,
     );
     final artist = ArtistData(
-      ArtistModel({'_id': 2, 'artist': 'Artist'}),
+      const ArtistMetadata(id: 2, artist: 'Artist'),
       albums: albums,
       songs: songs,
     );
     final song = SongData(
-      model: SongModel({
-        '_id': 3,
-        '_data': '/music/song.mp3',
-        'title': 'Song',
-        'artist_id': 2,
-        'album_id': 1,
-        'duration': 2500,
-        'track': 1,
-      }),
+      model: const SongMetadata(
+        id: 3,
+        data: '/music/song.mp3',
+        title: 'Song',
+        artistId: 2,
+        albumId: 1,
+        duration: 2500,
+        track: 1,
+      ),
       albumModel: album,
       playedTime: const Duration(seconds: 5),
       artists: artists,
@@ -61,12 +61,12 @@ void main() {
     final songs = <SongData>[];
     final artists = <ArtistData>[];
     final artist = ArtistData(
-      ArtistModel({'_id': 2, 'artist': 'Artist'}),
+      const ArtistMetadata(id: 2, artist: 'Artist'),
       albums: albums,
       songs: songs,
     );
     final album = AlbumData(
-      AlbumModel({'_id': 1, 'album': 'Unknown', 'numsongs': 1}),
+      const AlbumMetadata(id: 1, album: 'Unknown'),
       artwork: Uint8List(0),
       songs: songs,
       artists: artists,
@@ -74,11 +74,11 @@ void main() {
     albums.add(album);
     songs.add(
       SongData(
-        model: SongModel({
-          '_id': 3,
-          '_data': '/music/song.mp3',
-          'title': 'Song',
-        }),
+        model: const SongMetadata(
+          id: 3,
+          data: '/music/song.mp3',
+          title: 'Song',
+        ),
         albumModel: album,
         playedTime: Duration.zero,
         artists: artists,

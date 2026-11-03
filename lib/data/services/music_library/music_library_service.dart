@@ -1,7 +1,6 @@
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:player/model/library_metadata.dart';
 
-/// Raw platform library data. App-owned models can replace these plugin models
-/// once the rest of the library has been migrated.
+/// Platform-independent library metadata from a discovery service.
 class MusicLibrarySnapshot {
   const MusicLibrarySnapshot({
     required this.songs,
@@ -9,17 +8,17 @@ class MusicLibrarySnapshot {
     required this.artists,
   });
 
-  final List<SongModel> songs;
-  final List<AlbumModel> albums;
-  final List<ArtistModel> artists;
+  final List<SongMetadata> songs;
+  final List<AlbumMetadata> albums;
+  final List<ArtistMetadata> artists;
 }
 
 abstract class MusicLibraryService {
   Future<MusicLibrarySnapshot> scan();
 }
 
-List<SongModel> filterLibrarySongs(
-  List<SongModel> songs, {
+List<SongMetadata> filterLibrarySongs(
+  List<SongMetadata> songs, {
   required bool smartFilterEnabled,
   required int minimumDurationSeconds,
 }) {

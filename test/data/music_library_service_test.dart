@@ -4,6 +4,8 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/linux_music.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/services/music_library/audio_query_mapper.dart';
+import 'package:player/model/library_metadata.dart';
 import 'package:player/data/services/music_library/desktop_music_library_service.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,12 +83,14 @@ void main() {
   );
 
   test('song filtering retains the existing title and duration rules', () {
-    SongModel song(int id, String title, int? duration) => SongModel({
-      '_id': id,
-      '_data': '/music/$id.mp3',
-      'title': title,
-      'duration': duration,
-    });
+    SongMetadata song(int id, String title, int? duration) => mapSongMetadata(
+      SongModel({
+        '_id': id,
+        '_data': '/music/$id.mp3',
+        'title': title,
+        'duration': duration,
+      }),
+    );
 
     final songs = [
       song(1, 'AUD recording', 3000),

@@ -1,4 +1,4 @@
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:player/model/library_metadata.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
 
 typedef SongPlayedTimeLoader = Future<Duration> Function(int songId);
@@ -6,7 +6,7 @@ typedef SongPlayedTimeLoader = Future<Duration> Function(int songId);
 class LibrarySong {
   const LibrarySong({required this.model, required this.playedTime});
 
-  final SongModel model;
+  final SongMetadata model;
   final Duration playedTime;
 }
 
@@ -19,8 +19,8 @@ class MusicLibrary {
   });
 
   final List<LibrarySong> songs;
-  final List<AlbumModel> albums;
-  final List<ArtistModel> artists;
+  final List<AlbumMetadata> albums;
+  final List<ArtistMetadata> artists;
 }
 
 abstract class MusicLibraryRepository {

@@ -1,6 +1,7 @@
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/data/linux_music.dart';
+import 'package:player/data/services/music_library/audio_query_mapper.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
+import 'package:player/model/library_metadata.dart';
 
 class DesktopMusicLibraryService implements MusicLibraryService {
   DesktopMusicLibraryService({LinuxMusicLibrary? library})
@@ -12,25 +13,24 @@ class DesktopMusicLibraryService implements MusicLibraryService {
   Future<MusicLibrarySnapshot> scan() async {
     final directory = await _library.musicDirectory();
     final songs = directory == null
-        ? <SongModel>[]
-        : await _library.scan(directory);
-    final albums = <int, AlbumModel>{};
-    final artists = <int, ArtistModel>{};
+        ? <SongMetadata>[]
+        : (await _library.scan(directory)).map(mapSongMetadata).toList();
+    final albums = <int, AlbumMetadata>{};
+    final artists = <int, ArtistMetadata>{};
 
     for (final song in songs) {
       artists.putIfAbsent(
         song.artistId!,
-        () => ArtistModel({'_id': song.artistId, 'artist': song.artist}),
+        () => ArtistMetadata(id: song.artistId!, artist: song.artist!),
       );
       albums.putIfAbsent(
         song.albumId!,
-        () => AlbumModel({
-          '_id': song.albumId,
-          'album': song.album,
-          'artist': song.artist,
-          'artist_id': song.artistId,
-          'numsongs': 0,
-        }),
+        () => AlbumMetadata(
+          id: song.albumId!,
+          album: song.album!,
+          artist: song.artist,
+          artistId: song.artistId,
+        ),
       );
     }
 

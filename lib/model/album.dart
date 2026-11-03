@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:player/model/library_metadata.dart';
 import 'package:player/model/artist.dart';
 import 'package:player/model/song.dart';
 
 class AlbumData {
   final Uint8List artwork;
   String? imageURL;
-  AlbumModel model;
+  final AlbumMetadata model;
   final List<SongData> _songs;
   final List<ArtistData> _artists;
 

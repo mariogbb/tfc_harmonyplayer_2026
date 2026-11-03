@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:on_audio_query/on_audio_query.dart';
+import 'package:player/model/library_metadata.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
 
 class SongData {
-  final SongModel model;
+  final SongMetadata model;
   final AlbumData albumModel;
   final List<ArtistData> _artists;
   Duration playedTime;

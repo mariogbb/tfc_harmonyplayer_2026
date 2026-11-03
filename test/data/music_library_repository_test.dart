@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:player/data/services/music_library/audio_query_mapper.dart';
+import 'package:player/model/library_metadata.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
 
@@ -12,22 +14,26 @@ class FakeService implements MusicLibraryService {
 }
 
 void main() {
-  SongModel song(int id, int? albumId, String title, int? duration) =>
-      SongModel({
-        '_id': id,
-        '_data': '/music/$id.mp3',
-        'title': title,
-        'album_id': albumId,
-        'duration': duration,
-      });
-  AlbumModel album(int id, int artistId) => AlbumModel({
-    '_id': id,
-    'album': 'Album $id',
-    'artist_id': artistId,
-    'numsongs': 1,
-  });
-  ArtistModel artist(int id) =>
-      ArtistModel({'_id': id, 'artist': 'Artist $id'});
+  SongMetadata song(int id, int? albumId, String title, int? duration) =>
+      mapSongMetadata(
+        SongModel({
+          '_id': id,
+          '_data': '/music/$id.mp3',
+          'title': title,
+          'album_id': albumId,
+          'duration': duration,
+        }),
+      );
+  AlbumMetadata album(int id, int artistId) => mapAlbumMetadata(
+    AlbumModel({
+      '_id': id,
+      'album': 'Album $id',
+      'artist_id': artistId,
+      'numsongs': 1,
+    }),
+  );
+  ArtistMetadata artist(int id) =>
+      mapArtistMetadata(ArtistModel({'_id': id, 'artist': 'Artist $id'}));
 
   test(
     'filters songs, groups albums and artists, and restores history',
