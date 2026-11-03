@@ -68,7 +68,7 @@ class ThemeProvider with ChangeNotifier {
       800: getShade(color, value: 0.2, darker: true),
       900: getShade(color, value: 0.25, darker: true),
     };
-    return MaterialColor(color.value, colorShades);
+    return MaterialColor(color.toARGB32(), colorShades);
   }
 
   static Color getShade(Color color, {bool darker = false, double value = .1}) {

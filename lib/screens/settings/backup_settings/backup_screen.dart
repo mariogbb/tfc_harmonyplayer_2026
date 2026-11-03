@@ -1,16 +1,9 @@
 import 'dart:io';
 
 import 'package:filesystem_picker/filesystem_picker.dart';
-import 'package:path/path.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:player/data/settings.dart';
-import 'package:player/theme_data/theme_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:sqflite/sqflite.dart';
 
 class BackupSettingsScreen extends StatelessWidget {
   const BackupSettingsScreen({Key? key}) : super(key: key);
@@ -36,7 +29,7 @@ class BackupSettingsScreen extends StatelessWidget {
                 trailing: OutlinedButton(
                   onPressed: () {},
                   style: ButtonStyle(
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18.0),
                         side: BorderSide(
@@ -61,7 +54,7 @@ class BackupSettingsScreen extends StatelessWidget {
                     }
                   },
                   style: ButtonStyle(
-                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18.0),
                         side: BorderSide(

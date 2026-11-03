@@ -41,7 +41,7 @@ bool showInitScreen = false;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (!Platform.isLinux) {
+  if (!Platform.isLinux && !Platform.isWindows) {
     await Firebase.initializeApp();
 
     // "Fatal" errors log on firebase
@@ -83,7 +83,7 @@ Future<void> main() async {
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  Settings.init();
+  await Settings.init();
   Settings.ensureCacheProvider();
 
   int? initScreen = prefs.getInt("initScreen");
@@ -196,6 +196,7 @@ class _MyHomePageState extends State<MyHomePage>
     )..addListener(() {
         if (_tabController.indexIsChanging) {
           setState(() {
+            selectedIndex = _tabController.index;
             _animationController.forward(from: 0.25);
           });
         }
@@ -205,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void requestPermissions() async {
-    if (Platform.isLinux) {
+    if (Platform.isLinux || Platform.isWindows) {
       widget.playerData.initState();
       return;
     }

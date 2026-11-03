@@ -48,7 +48,7 @@ class DarkTheme {
       case TopBarTheme.squared:
         return AppBarTheme(
           centerTitle: true,
-          color: ThemeProvider.recoverColor().withAlpha(50),
+          backgroundColor: ThemeProvider.recoverColor().withAlpha(50),
           iconTheme: IconThemeData(color: ThemeProvider.recoverColor()),
         );
       case TopBarTheme.seamless:

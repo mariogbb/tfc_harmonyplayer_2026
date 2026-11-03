@@ -14,8 +14,6 @@ class CastService {
   void connectToDevice(CastDevice device) async {
     CastSessionManager sessionManager = CastSessionManager();
 
-    CastSession session = await sessionManager.startSession(device);
-
-    print(session.state);
+    await sessionManager.startSession(device);
   }
 }

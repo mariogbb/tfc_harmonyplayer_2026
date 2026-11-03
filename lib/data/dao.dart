@@ -7,8 +7,6 @@ import 'package:player/data/data.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/model/ranking.dart';
 import 'package:player/model/song.dart';
-import 'package:player/widgets/song_list.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class PlayerDatabase {
@@ -25,7 +23,7 @@ class PlayerDatabase {
   static PlayerDatabase get instance => _playerDatabase;
 
   Future initState() async {
-    if (Platform.isLinux) {
+    if (Platform.isLinux || Platform.isWindows) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }

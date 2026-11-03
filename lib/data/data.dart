@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
@@ -14,6 +13,7 @@ import 'package:player/data/dao.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/control/media_control.dart';
+import 'package:player/data/linux_music.dart';
 
 class PlayerData extends ChangeNotifier {
   static final PlayerData _playerData = PlayerData.internal();
@@ -35,7 +35,7 @@ class PlayerData extends ChangeNotifier {
 
   // Init state
   Future<void> initHandler() async {
-    if (Platform.isLinux) {
+    if (Platform.isLinux || Platform.isWindows) {
       handler = PlayerHandler();
       return;
     }
@@ -105,8 +105,47 @@ class PlayerData extends ChangeNotifier {
   }
 
   Future loadSongs() async {
-    // on_audio_query does not implement Linux media-library discovery.
-    if (Platform.isLinux) return;
+    if (Platform.isLinux || Platform.isWindows) {
+      final library = LinuxMusicLibrary();
+      final directory = await library.musicDirectory();
+      if (directory == null) return;
+      final songs = await library.scan(directory);
+      for (final song in songs) {
+        if (Settings.getValue<bool>('smartFilterEnabled',
+                defaultValue: true)! &&
+            song.title.startsWith('AUD')) {
+          continue;
+        }
+        if (song.duration! <
+            Settings.getValue<double>('filterDuration', defaultValue: 0)!
+                    .toInt() *
+                1000) {
+          continue;
+        }
+        if (!artistList.any((artist) => artist.id == song.artistId)) {
+          artistList.add(ArtistData(ArtistModel({
+            '_id': song.artistId,
+            'artist': song.artist,
+          })));
+        }
+        var albums = albumList.where((album) => album.id == song.albumId);
+        if (albums.isEmpty) {
+          albumList.add(AlbumData(AlbumModel({
+            '_id': song.albumId,
+            'album': song.album,
+            'artist': song.artist,
+            'artist_id': song.artistId,
+            'numsongs': 0,
+          })));
+          albums = albumList.where((album) => album.id == song.albumId);
+        }
+        final playedTime =
+            await PlayerDatabase.instance.getSongPlayedTime(song.id);
+        songList.add(SongData(
+            model: song, albumModel: albums.first, playedTime: playedTime));
+      }
+      return;
+    }
     if (await Permission.storage.isDenied) {
       return;
     }

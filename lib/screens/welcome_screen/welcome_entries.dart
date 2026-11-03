@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:player/screens/welcome_screen/welcome_entry.dart';
@@ -18,6 +20,7 @@ List welcomeSlideWidgets = [
           "Para poder escuchar música la aplicación necesita leer las canciones desde el almacenamiento",
       optionalWidget: TextButton(
           onPressed: () async {
+            if (Platform.isLinux || Platform.isWindows) return;
             List<Permission> req = [];
 
             var state = await Permission.storage.status;

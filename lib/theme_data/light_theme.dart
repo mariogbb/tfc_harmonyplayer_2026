@@ -48,7 +48,7 @@ class LightTheme {
         );
       case TopBarTheme.seamless:
         return AppBarTheme(
-          color: Colors.white,
+          backgroundColor: Colors.white,
           elevation: 0,
           shadowColor: Colors.white,
           centerTitle: true,

@@ -37,7 +37,7 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                     title: AppLocalizations.of(context)!.accent_color,
                     settingKey: "accent_color",
                     defaultStringValue:
-                        "#${value.selectedPrimaryColor.value.toRadixString(16)}",
+                        "#${value.selectedPrimaryColor.toARGB32().toRadixString(16)}",
                     onChange: (p0) {
                       value.setSelectedPrimaryColor(p0);
                     },

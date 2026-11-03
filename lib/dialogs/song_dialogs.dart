@@ -35,7 +35,7 @@ class SongDialogs {
                     trailing: OutlinedButton(
                       style: ButtonStyle(
                         shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18.0),
                             side: const BorderSide(
@@ -115,7 +115,7 @@ class SongDialogs {
                     trailing: OutlinedButton(
                       style: ButtonStyle(
                         shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                            WidgetStateProperty.all<RoundedRectangleBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(18.0),
                             side: const BorderSide(

@@ -76,8 +76,10 @@ class AlbumData {
   void _loadArtwork() async {
     OnAudioQuery query = OnAudioQuery();
 
-    Uint8List? buffer = await query.queryArtwork(id, ArtworkType.ALBUM,
-        format: ArtworkFormat.PNG);
+    Uint8List? buffer = (Platform.isLinux || Platform.isWindows)
+        ? null
+        : await query.queryArtwork(id, ArtworkType.ALBUM,
+            format: ArtworkFormat.PNG);
 
     if (buffer == null) {
       var a = await rootBundle.load("assets/no_artwork_icon.png");

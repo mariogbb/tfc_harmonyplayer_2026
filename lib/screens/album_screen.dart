@@ -79,7 +79,7 @@ class AlbumScreenState extends State<AlbumScreen>
     return OutlinedButton.icon(
       icon: const Icon(Icons.shuffle),
       style: ButtonStyle(
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18.0),
             side: BorderSide(

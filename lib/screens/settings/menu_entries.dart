@@ -4,7 +4,6 @@ import 'package:player/screens/settings/about_screen/about_app_screen.dart';
 import 'package:player/screens/settings/app_settings/app_settings_screen.dart';
 import 'package:player/screens/settings/backup_settings/backup_screen.dart';
 import 'package:player/screens/settings/look_and_feel/look_and_feel.dart';
-import 'package:player/screens/settings/playing_screen/playing_screen.dart';
 import 'package:player/screens/settings/song_settings/song_settings.dart';
 
 List<Widget> menuEntries(BuildContext context) {

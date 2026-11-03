@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 class AppChangelogDialogs {
   static void launchChangelogDialog(BuildContext context) async {
     String data = await rootBundle.loadString("assets/changelog");
+    if (!context.mounted) return;
     List<String> changeLog = data.split("\n");
 
     showDialog(
