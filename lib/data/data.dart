@@ -10,7 +10,7 @@ import 'package:player/data/dao.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/control/media_control.dart';
-import 'package:player/data/services/music_library/music_library_service.dart';
+import 'package:player/data/repositories/music_library_repository.dart';
 
 class PlayerData extends ChangeNotifier {
   static final PlayerData _playerData = PlayerData.internal();
@@ -21,7 +21,7 @@ class PlayerData extends ChangeNotifier {
   late final List<ArtistData> artistList = [];
   late final List<PlaylistData> playlists = [];
   late final PlayerHandler handler;
-  late MusicLibraryService _musicLibrary;
+  late MusicLibraryRepository _musicLibrary;
 
   factory PlayerData() {
     return _playerData;
@@ -31,7 +31,7 @@ class PlayerData extends ChangeNotifier {
 
   PlayerData.internal();
 
-  void configureMusicLibrary(MusicLibraryService musicLibrary) {
+  void configureMusicLibrary(MusicLibraryRepository musicLibrary) {
     _musicLibrary = musicLibrary;
   }
 
@@ -109,9 +109,7 @@ class PlayerData extends ChangeNotifier {
   }
 
   Future<void> loadSongs() async {
-    final library = await _musicLibrary.scan();
-    final filteredSongs = filterLibrarySongs(
-      library.songs,
+    final library = await _musicLibrary.load(
       smartFilterEnabled: Settings.getValue<bool>(
         'smartFilterEnabled',
         defaultValue: true,
@@ -121,46 +119,27 @@ class PlayerData extends ChangeNotifier {
         defaultValue: 0,
       )!.toInt(),
     );
-    final albumIds = filteredSongs.map((song) => song.albumId).toSet();
-    final artistIds = filteredSongs.map((song) => song.artistId).toSet();
-
     for (final album in library.albums) {
-      if (library.filterEntitiesBeforeLoading && !albumIds.contains(album.id)) {
-        continue;
-      }
       albumList.add(AlbumData(album));
     }
 
-    for (final song in filteredSongs) {
+    for (final song in library.songs) {
       try {
         AlbumData album = albumList.firstWhere(
-          (element) => element.id == song.albumId!,
+          (element) => element.id == song.model.albumId,
         );
-
-        bool isSongOnDatabase = await PlayerDatabase.instance
-            .findSongInDatabase(song.id);
-
-        Duration playedTime = Duration.zero;
-
-        if (isSongOnDatabase) {
-          playedTime = await PlayerDatabase.instance.getSongPlayedTime(song.id);
-        }
-
         songList.add(
-          SongData(model: song, albumModel: album, playedTime: playedTime),
+          SongData(
+            model: song.model,
+            albumModel: album,
+            playedTime: song.playedTime,
+          ),
         );
       } catch (_) {}
     }
 
     for (final model in library.artists) {
-      if (library.filterEntitiesBeforeLoading &&
-          !artistIds.contains(model.id)) {
-        continue;
-      }
       artistList.add(ArtistData(model));
     }
-
-    albumList.retainWhere((element) => element.songList.isNotEmpty);
-    artistList.retainWhere((element) => element.albumList.isNotEmpty);
   }
 }

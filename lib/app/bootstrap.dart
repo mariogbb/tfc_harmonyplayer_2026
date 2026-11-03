@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
+import 'package:player/data/repositories/music_library_repository.dart';
 import 'package:player/data/services/music_library/desktop_music_library_service.dart';
 import 'package:player/data/services/music_library/platform_music_library_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,10 +26,14 @@ Future<bool> bootstrap() async {
   final showWelcome = await initializeWelcomePreference(prefs);
 
   await PlayerDatabase.instance.initState();
+  final musicService = Platform.isLinux || Platform.isWindows
+      ? DesktopMusicLibraryService()
+      : PlatformMusicLibraryService();
   PlayerData.instance.configureMusicLibrary(
-    Platform.isLinux || Platform.isWindows
-        ? DesktopMusicLibraryService()
-        : PlatformMusicLibraryService(),
+    DefaultMusicLibraryRepository(
+      service: musicService,
+      loadPlayedTime: PlayerDatabase.instance.getSongPlayedTime,
+    ),
   );
   await PlayerData.instance.initHandler();
   return showWelcome;

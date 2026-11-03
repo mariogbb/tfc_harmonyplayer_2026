@@ -3,6 +3,7 @@ import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/linux_music.dart';
+import 'package:player/data/repositories/music_library_repository.dart';
 import 'package:player/data/services/music_library/desktop_music_library_service.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,7 +61,13 @@ void main() {
       await Settings.init();
 
       final library = FakeMusicLibrary();
-      final data = PlayerData.internal()..configureMusicLibrary(library);
+      final data = PlayerData.internal()
+        ..configureMusicLibrary(
+          DefaultMusicLibraryRepository(
+            service: library,
+            loadPlayedTime: (_) async => Duration.zero,
+          ),
+        );
 
       addTearDown(data.dispose);
 
@@ -114,6 +121,5 @@ void main() {
     expect(snapshot.songs.map((song) => song.id), [1, 4]);
     expect(snapshot.albums.map((album) => album.id), [3]);
     expect(snapshot.artists.map((artist) => artist.id), [2]);
-    expect(snapshot.filterEntitiesBeforeLoading, isTrue);
   });
 }

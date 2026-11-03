@@ -38,7 +38,6 @@ class DesktopMusicLibraryService implements MusicLibraryService {
       songs: songs,
       albums: albums.values.toList(),
       artists: artists.values.toList(),
-      filterEntitiesBeforeLoading: true,
     );
   }
 }
