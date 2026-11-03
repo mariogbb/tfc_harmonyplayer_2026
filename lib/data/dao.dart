@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:path/path.dart';
 import 'package:player/data/data.dart';
-import 'package:player/model/playlist.dart';
 import 'package:player/model/ranking.dart';
 import 'package:player/model/song.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -127,71 +126,4 @@ class PlayerDatabase {
     return rankingList;
   }
 
-  // Playlists
-  Future<List<PlaylistData>> loadPlaylists() async {
-    List<PlaylistData> playlistList = [];
-
-    try {
-      List<Map> playlistQuery =
-          await database.query("PLAYLISTS", columns: ["ID", "PLAYLIST_NAME"]);
-
-      for (var element in playlistQuery) {
-        List<SongData> songList = [];
-        List<Map> songsQuery = await database.query("PLAYLIST_SONGS",
-            columns: ["SONG_ID"],
-            where: "PLAYLIST_ID == ?",
-            whereArgs: [element["ID"]]);
-        for (var songElement in songsQuery) {
-          try {
-            SongData song = data.songList.firstWhere((dataElement) =>
-                dataElement.id.toString() == songElement["SONG_ID"].toString());
-            songList.add(song);
-          } catch (_) {}
-        }
-
-        playlistList.add(PlaylistData(
-            id: element["ID"],
-            songs: songList,
-            name: element["PLAYLIST_NAME"].toString()));
-      }
-    } catch (_) {}
-
-    return playlistList;
-  }
-
-  void addToPlaylist(PlaylistData playlist, SongData song) {
-    try {
-      database.insert("PLAYLIST_SONGS",
-          {"SONG_ID": "${song.id}", "PLAYLIST_ID": playlist.id},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (_) {}
-  }
-
-  void removeFromPlaylist(PlaylistData playlist, SongData song) {
-    try {
-      database
-          .rawDelete("DELETE FROM PLAYLIST_SONGS WHERE SONG_ID = ?", [song.id]);
-    } catch (_) {}
-  }
-
-  Future<PlaylistData?> createPlaylist(String name) async {
-    PlaylistData? playlist;
-
-    try {
-      int id = await database.insert("PLAYLISTS", {"PLAYLIST_NAME": name},
-          conflictAlgorithm: ConflictAlgorithm.ignore);
-
-      if (id > 0) {
-        return PlaylistData(songs: [], name: name, id: id);
-      }
-    } catch (_) {}
-
-    return playlist;
-  }
-
-  Future<void> removePlaylistFromDatabase(PlaylistData playlist) async {
-    try {
-      database.rawDelete("DELETE FROM PLAYLISTS WHERE ID = ?", [playlist.id]);
-    } catch (_) {}
-  }
 }

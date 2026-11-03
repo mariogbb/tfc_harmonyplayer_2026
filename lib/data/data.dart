@@ -6,12 +6,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
-import 'package:player/data/dao.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
 import 'package:player/data/repositories/artwork_repository.dart';
+import 'package:player/data/repositories/playlist_repository.dart';
 import 'package:player/data/services/artwork/local_artwork_service.dart';
 
 class PlayerData extends ChangeNotifier {
@@ -26,6 +26,7 @@ class PlayerData extends ChangeNotifier {
   late MusicLibraryRepository _musicLibrary;
   late ArtworkRepository _artworkRepository;
   late LocalArtworkService _localArtwork;
+  late PlaylistRepository _playlistRepository;
   bool _disposed = false;
 
   factory PlayerData() {
@@ -43,6 +44,10 @@ class PlayerData extends ChangeNotifier {
   void configureArtwork(ArtworkRepository artwork, LocalArtworkService local) {
     _artworkRepository = artwork;
     _localArtwork = local;
+  }
+
+  void configurePlaylists(PlaylistRepository repository) {
+    _playlistRepository = repository;
   }
 
   @override
@@ -77,7 +82,9 @@ class PlayerData extends ChangeNotifier {
     playlists.clear();
 
     await loadSongs();
-    List<PlaylistData> loadedPlaylists = await PlayerDatabase().loadPlaylists();
+    List<PlaylistData> loadedPlaylists = await _playlistRepository.load(
+      songList,
+    );
 
     loadedPlaylists.forEach(playlists.add);
     notifyListeners();
@@ -87,7 +94,7 @@ class PlayerData extends ChangeNotifier {
     PlaylistData? newPlaylist;
 
     if (playlists.where((element) => element.name == name).isEmpty) {
-      newPlaylist = await PlayerDatabase.instance.createPlaylist(name);
+      newPlaylist = await _playlistRepository.create(name);
 
       if (newPlaylist != null) {
         playlists.add(newPlaylist);
@@ -104,6 +111,7 @@ class PlayerData extends ChangeNotifier {
     SongData data,
   ) async {
     if (playlist.songs.contains(data)) {
+      await _playlistRepository.removeSong(playlist.id, data.id);
       playlist.songs.remove(data);
       notifyListeners();
     }
@@ -111,15 +119,21 @@ class PlayerData extends ChangeNotifier {
 
   Future<void> addSongToPlaylist(PlaylistData playlist, SongData data) async {
     if (!playlist.songs.contains(data)) {
-      playlist.songs.add(data);
+      await _playlistRepository.addSong(playlist.id, data.id);
+      if (!playlist.songs.contains(data)) playlist.songs.add(data);
       notifyListeners();
     }
   }
 
-  void renamePlaylist(String newName, PlaylistData playlist) {}
+  Future<void> renamePlaylist(String newName, PlaylistData playlist) async {
+    if (await _playlistRepository.rename(playlist.id, newName)) {
+      playlist.name = newName;
+      notifyListeners();
+    }
+  }
 
   void deletePlaylist(PlaylistData playlist) async {
-    await PlayerDatabase.instance.removePlaylistFromDatabase(playlist);
+    await _playlistRepository.delete(playlist.id);
     playlists.remove(playlist);
     notifyListeners();
   }

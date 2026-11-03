@@ -1,5 +1,4 @@
 import 'package:player/data/linux_music.dart';
-import 'package:player/data/services/music_library/audio_query_mapper.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
 import 'package:player/model/library_metadata.dart';
 
@@ -14,7 +13,7 @@ class DesktopMusicLibraryService implements MusicLibraryService {
     final directory = await _library.musicDirectory();
     final songs = directory == null
         ? <SongMetadata>[]
-        : (await _library.scan(directory)).map(mapSongMetadata).toList();
+        : await _library.scan(directory);
     final albums = <int, AlbumMetadata>{};
     final artists = <int, ArtistMetadata>{};
 

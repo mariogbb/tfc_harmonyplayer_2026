@@ -46,7 +46,7 @@ class SongDialogs {
                       ),
                       onPressed: () {
                         for (var element in playlistToAdd) {
-                          element.addSong(song);
+                          data.addSongToPlaylist(element, song);
                         }
                         Navigator.of(context).pop();
                       },
@@ -127,7 +127,7 @@ class SongDialogs {
                       onPressed: () {
                         for (var element in playlistToAdd) {
                           for (var song in album.songList) {
-                            element.addSong(song);
+                            data.addSongToPlaylist(element, song);
                           }
                         }
                         Navigator.of(context).pop();

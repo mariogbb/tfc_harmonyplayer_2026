@@ -121,7 +121,7 @@ class PlaylistDialogs {
                         if (text.isEmpty) {
                           setState(() => error = true);
                         } else {
-                          PlayerData().createPlaylist(text);
+                          PlayerData().renamePlaylist(text, playlist);
                           Navigator.pop(context);
                         }
                       },

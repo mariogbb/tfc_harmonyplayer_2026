@@ -25,30 +25,30 @@ class FakeDesktopScanner extends LinuxMusicLibrary {
   Future<String?> musicDirectory() async => '/music';
 
   @override
-  Future<List<SongModel>> scan(String directory) async {
+  Future<List<SongMetadata>> scan(String directory) async {
     expect(directory, '/music');
 
     return [
-      SongModel({
-        '_id': 1,
-        '_data': '/music/song.mp3',
-        'title': 'Song',
-        'artist': 'Artist',
-        'artist_id': 2,
-        'album': 'Album',
-        'album_id': 3,
-        'duration': 1000,
-      }),
-      SongModel({
-        '_id': 4,
-        '_data': '/music/other.mp3',
-        'title': 'Other',
-        'artist': 'Artist',
-        'artist_id': 2,
-        'album': 'Album',
-        'album_id': 3,
-        'duration': 2000,
-      }),
+      const SongMetadata(
+        id: 1,
+        data: '/music/song.mp3',
+        title: 'Song',
+        artist: 'Artist',
+        artistId: 2,
+        album: 'Album',
+        albumId: 3,
+        duration: 1000,
+      ),
+      const SongMetadata(
+        id: 4,
+        data: '/music/other.mp3',
+        title: 'Other',
+        artist: 'Artist',
+        artistId: 2,
+        album: 'Album',
+        albumId: 3,
+        duration: 2000,
+      ),
     ];
   }
 }

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path/path.dart' as path;
+import 'package:player/model/library_metadata.dart';
 
 /// Finds local music without relying on Android's media library.
 class LinuxMusicLibrary {
@@ -13,7 +13,7 @@ class LinuxMusicLibrary {
     '.flac',
     '.wav',
     '.m4a',
-    '.aac'
+    '.aac',
   };
 
   Future<String?> musicDirectory() async {
@@ -42,13 +42,15 @@ class LinuxMusicLibrary {
     return hash;
   }
 
-  Future<List<SongModel>> scan(String directory) async {
-    final songs = <SongModel>[];
+  Future<List<SongMetadata>> scan(String directory) async {
+    final songs = <SongMetadata>[];
     final root = Directory(directory);
     if (!await root.exists()) return songs;
     try {
-      await for (final entity
-          in root.list(recursive: true, followLinks: false)) {
+      await for (final entity in root.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is! File ||
             !extensions.contains(path.extension(entity.path).toLowerCase())) {
           continue;
@@ -68,42 +70,43 @@ class LinuxMusicLibrary {
               filePath,
             ]);
             if (result.exitCode == 0) {
-              final format = (jsonDecode(result.stdout as String)
-                  as Map)['format'] as Map?;
+              final format =
+                  (jsonDecode(result.stdout as String) as Map)['format']
+                      as Map?;
               if (format != null) {
                 duration =
                     ((double.tryParse('${format['duration']}') ?? 0) * 1000)
                         .round();
                 final rawTags = format['tags'];
                 if (rawTags is Map) {
-                  rawTags.forEach((key, value) =>
-                      tags[key.toString().toLowerCase()] = value);
+                  rawTags.forEach(
+                    (key, value) => tags[key.toString().toLowerCase()] = value,
+                  );
                 }
               }
             }
           } on ProcessException catch (_) {
           } on FormatException catch (_) {}
-          final title = tags['title']?.toString() ??
+          final title =
+              tags['title']?.toString() ??
               path.basenameWithoutExtension(filePath);
           final artist = tags['artist']?.toString() ?? 'Unknown artist';
           final album = tags['album']?.toString() ?? 'Unknown album';
-          songs.add(SongModel({
-            '_id': stableId('song:$filePath'),
-            '_data': filePath,
-            '_uri': filePath,
-            '_display_name': path.basename(filePath),
-            '_display_name_wo_ext': path.basenameWithoutExtension(filePath),
-            '_size': await entity.length(),
-            'title': title,
-            'artist': artist,
-            'artist_id': stableId('artist:$artist'),
-            'album': album,
-            'album_id': stableId('album:$artist\u0000$album'),
-            'duration': duration,
-            'track':
-                int.tryParse('${tags['track'] ?? ''}'.split('/').first) ?? 0,
-            'file_extension': path.extension(filePath).replaceFirst('.', ''),
-          }));
+          songs.add(
+            SongMetadata(
+              id: stableId('song:$filePath'),
+              data: filePath,
+              uri: filePath,
+              title: title,
+              artist: artist,
+              artistId: stableId('artist:$artist'),
+              album: album,
+              albumId: stableId('album:$artist\u0000$album'),
+              duration: duration,
+              track:
+                  int.tryParse('${tags['track'] ?? ''}'.split('/').first) ?? 0,
+            ),
+          );
         } on FileSystemException catch (_) {}
       }
     } on FileSystemException catch (_) {

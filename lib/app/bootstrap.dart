@@ -11,6 +11,7 @@ import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
 import 'package:player/data/repositories/artwork_repository.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/repositories/playlist_repository.dart';
 import 'package:player/data/services/artwork/database_artwork_cache.dart';
 import 'package:player/data/services/artwork/deezer_artwork_service.dart';
 import 'package:player/data/services/artwork/local_artwork_service.dart';
@@ -31,6 +32,9 @@ Future<bool> bootstrap() async {
   final showWelcome = await initializeWelcomePreference(prefs);
 
   await PlayerDatabase.instance.initState();
+  PlayerData.instance.configurePlaylists(
+    SqlitePlaylistRepository(PlayerDatabase.instance.database),
+  );
   final musicService = Platform.isLinux || Platform.isWindows
       ? DesktopMusicLibraryService()
       : PlatformMusicLibraryService();
