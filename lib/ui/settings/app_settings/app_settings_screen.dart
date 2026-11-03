@@ -15,9 +15,7 @@ class AppGeneralSettingsScreen extends StatefulWidget {
 class AppGeneralSettingsScreenState extends State<AppGeneralSettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context)
-        .textTheme
-        .headlineSmall!
+    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
         .copyWith(color: Theme.of(context).primaryColor);
 
     return SafeArea(
@@ -41,12 +39,13 @@ class AppGeneralSettingsScreenState extends State<AppGeneralSettingsScreen> {
                         ? value.getAppLocale!.countryCode ?? "en"
                         : "en",
                     onChange: (p0) {
-                      PlayerSettings.instance
-                          .setLocale(Locale.fromSubtags(languageCode: p0));
+                      PlayerSettings.instance.setLocale(
+                        Locale.fromSubtags(languageCode: p0),
+                      );
                     },
                     values: {
                       for (var element in locales)
-                        element.languageCode: element.languageCode
+                        element.languageCode: element.languageCode,
                     },
                   );
                 },

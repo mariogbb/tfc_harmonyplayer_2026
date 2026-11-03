@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:player/l10n/app_localizations.dart';
-import 'menu_entries.dart';
+import 'package:player/ui/settings/menu_entries.dart';
 
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({Key? key}) : super(key: key);
@@ -23,14 +23,10 @@ class AppSettingsScreenState extends State<AppSettingsScreen> {
       top: true,
       child: Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.settings),
-        ),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.settings)),
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-          child: ListView(
-            children: menuEntries(context),
-          ),
+          child: ListView(children: menuEntries(context)),
         ),
       ),
     );

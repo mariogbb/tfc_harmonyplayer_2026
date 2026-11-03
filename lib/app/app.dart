@@ -9,7 +9,7 @@ import 'package:player/screens/playlist/single_playlist_screen.dart';
 import 'package:player/screens/rankings/top_played_albums.dart';
 import 'package:player/screens/rankings/top_played_songs.dart';
 import 'package:player/screens/search_overlay.dart';
-import 'package:player/screens/settings/settings_screen.dart';
+import 'package:player/ui/settings/settings_screen.dart';
 import 'package:player/theme_data/dark_theme.dart';
 import 'package:player/theme_data/light_theme.dart';
 import 'package:player/theme_data/theme_provider.dart';

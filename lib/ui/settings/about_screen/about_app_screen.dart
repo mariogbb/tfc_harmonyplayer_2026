@@ -7,16 +7,12 @@ class AboutAppScreen extends StatelessWidget {
   const AboutAppScreen({Key? key}) : super(key: key);
 
   AppBar _getAppbar(BuildContext context) {
-    return AppBar(
-      title: Text(AppLocalizations.of(context)!.about),
-    );
+    return AppBar(title: Text(AppLocalizations.of(context)!.about));
   }
 
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context)
-        .textTheme
-        .headlineSmall!
+    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
         .copyWith(color: Theme.of(context).primaryColor);
 
     return SafeArea(

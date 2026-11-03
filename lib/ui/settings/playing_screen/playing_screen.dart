@@ -22,15 +22,15 @@ class PlayingScreenSettingsState extends State<PlayingScreenSettings> {
             title: AppLocalizations.of(context)!.look_and_feel,
             children: [
               DropDownSettingsTile<int>(
-                title:
-                    AppLocalizations.of(context)!.playing_screen_artwork_shape,
+                title: AppLocalizations.of(context)!
+                    .playing_screen_artwork_shape,
                 settingKey: "playing_artwork_shape",
                 selected: ArtworkShape.circle.index,
                 values: <int, String>{
                   ArtworkShape.circle.index: AppLocalizations.of(context)!
                       .playing_screen_artwork_shape_circle,
                   ArtworkShape.square.index: AppLocalizations.of(context)!
-                      .playing_screen_artwork_shape_square
+                      .playing_screen_artwork_shape_square,
                 },
               ),
             ],

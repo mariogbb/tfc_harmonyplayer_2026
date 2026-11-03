@@ -10,9 +10,7 @@ class BackupSettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context)
-        .textTheme
-        .headlineSmall!
+    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
         .copyWith(color: Theme.of(context).primaryColor);
 
     return SafeArea(
@@ -32,9 +30,7 @@ class BackupSettingsScreen extends StatelessWidget {
                     shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18.0),
-                        side: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                        ),
+                        side: BorderSide(color: Theme.of(context).primaryColor),
                       ),
                     ),
                   ),
@@ -46,8 +42,9 @@ class BackupSettingsScreen extends StatelessWidget {
                 trailing: OutlinedButton(
                   onPressed: () async {
                     String? path = await FilesystemPicker.open(
-                        context: context,
-                        rootDirectory: Directory("/storage/emulated/0"));
+                      context: context,
+                      rootDirectory: Directory("/storage/emulated/0"),
+                    );
 
                     if (path != null) {
                       if (path.endsWith("player_db.db")) {}
@@ -57,9 +54,7 @@ class BackupSettingsScreen extends StatelessWidget {
                     shape: WidgetStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18.0),
-                        side: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                        ),
+                        side: BorderSide(color: Theme.of(context).primaryColor),
                       ),
                     ),
                   ),

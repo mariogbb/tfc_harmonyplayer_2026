@@ -17,9 +17,7 @@ class LookAndFeelScreen extends StatefulWidget {
 class LookAndFeelScreenState extends State<LookAndFeelScreen> {
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context)
-        .textTheme
-        .headlineSmall!
+    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
         .copyWith(color: Theme.of(context).primaryColor);
 
     return SafeArea(
@@ -58,11 +56,11 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                     values: <int, String>{
                       0: AppLocalizations.of(context)!.color_mode_system,
                       1: AppLocalizations.of(context)!.color_mode_ligth,
-                      2: AppLocalizations.of(context)!.color_mode_dark
+                      2: AppLocalizations.of(context)!.color_mode_dark,
                     },
                   );
                 },
-              )
+              ),
             ],
           ),
           SettingsGroup(
@@ -74,10 +72,10 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                 settingKey: "song_artwork_shape",
                 selected: ArtworkShape.circle.index,
                 values: <int, String>{
-                  ArtworkShape.circle.index:
-                      AppLocalizations.of(context)!.song_artwork_shape_circle,
-                  ArtworkShape.square.index:
-                      AppLocalizations.of(context)!.song_artwork_shape_square
+                  ArtworkShape.circle.index: AppLocalizations.of(context)!
+                      .song_artwork_shape_circle,
+                  ArtworkShape.square.index: AppLocalizations.of(context)!
+                      .song_artwork_shape_square,
                 },
               ),
               SwitchSettingsTile(
@@ -87,7 +85,7 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                 onChange: (p0) {
                   PlayerSettings.instance.setShowSongTimeLabel(p0);
                 },
-              )
+              ),
             ],
           ),
           SettingsGroup(
@@ -99,10 +97,10 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                 settingKey: "albumtab_artwork_shape",
                 selected: ArtworkShape.circle.index,
                 values: <int, String>{
-                  ArtworkShape.circle.index:
-                      AppLocalizations.of(context)!.album_artwork_shape_circle,
-                  ArtworkShape.square.index:
-                      AppLocalizations.of(context)!.album_artwork_shape_square
+                  ArtworkShape.circle.index: AppLocalizations.of(context)!
+                      .album_artwork_shape_circle,
+                  ArtworkShape.square.index: AppLocalizations.of(context)!
+                      .album_artwork_shape_square,
                 },
               ),
             ],
@@ -121,16 +119,16 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                       value.setSelectedTopBarTheme(TopBarTheme.values[p0]);
                     },
                     values: <int, String>{
-                      TopBarTheme.rounded.index:
-                          AppLocalizations.of(context)!.app_bar_theme_rounded,
-                      TopBarTheme.squared.index:
-                          AppLocalizations.of(context)!.app_bar_theme_square,
-                      TopBarTheme.seamless.index:
-                          AppLocalizations.of(context)!.app_bar_theme_seamless
+                      TopBarTheme.rounded.index: AppLocalizations.of(context)!
+                          .app_bar_theme_rounded,
+                      TopBarTheme.squared.index: AppLocalizations.of(context)!
+                          .app_bar_theme_square,
+                      TopBarTheme.seamless.index: AppLocalizations.of(context)!
+                          .app_bar_theme_seamless,
                     },
                   );
                 },
-              )
+              ),
             ],
           ),
           SettingsGroup(
@@ -144,7 +142,7 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                 onChange: (p0) {
                   PlayerSettings.instance.showTabLabels(p0);
                 },
-              )
+              ),
             ],
           ),
         ],

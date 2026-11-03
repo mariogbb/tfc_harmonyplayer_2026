@@ -15,9 +15,7 @@ class SongSettingsScreen extends StatefulWidget {
 class SongSettingsScreenState extends State<SongSettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context)
-        .textTheme
-        .headlineSmall!
+    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
         .copyWith(color: Theme.of(context).primaryColor);
 
     return SafeArea(
@@ -33,8 +31,8 @@ class SongSettingsScreenState extends State<SongSettingsScreen> {
                 builder: (context, value, child) {
                   return SwitchSettingsTile(
                     title: AppLocalizations.of(context)!.smart_filter_sett,
-                    subtitle:
-                        AppLocalizations.of(context)!.smart_filter_sett_desc,
+                    subtitle: AppLocalizations.of(context)!
+                        .smart_filter_sett_desc,
                     settingKey: "smartFilterEnabled",
                   );
                 },
@@ -45,8 +43,8 @@ class SongSettingsScreenState extends State<SongSettingsScreen> {
                     max: 120,
                     min: 0,
                     step: 1,
-                    title:
-                        AppLocalizations.of(context)!.minimum_song_lenght_sett,
+                    title: AppLocalizations.of(context)!
+                        .minimum_song_lenght_sett,
                     subtitle: AppLocalizations.of(context)!
                         .minimum_song_lenght_sett_desc,
                     settingKey: "filterDuration",
