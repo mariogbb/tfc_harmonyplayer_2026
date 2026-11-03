@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/widgets.dart';
+import 'package:player/control/playback_queue.dart';
 import 'package:player/data/dao.dart';
 import 'package:player/data/data.dart';
 import 'package:player/model/album.dart';
@@ -19,10 +20,8 @@ class PlayerHandler extends BaseAudioHandler
   bool _disposed = false;
 
   // Queues and lists to add items to play
-  final List<SongData> _playNext = [];
-  List<SongData> _songQueue = [];
+  final PlaybackQueue<SongData> _queue = PlaybackQueue();
   SongData? _playing;
-  int playingIndex = 0;
   PlayingContext? _playingContext;
 
   // Playing state variables
@@ -32,9 +31,7 @@ class PlayerHandler extends BaseAudioHandler
   Duration _playedTime = Duration.zero;
   int _prevDiff = 0;
 
-  // Variables for shuffle mode
-  bool shuffle = false;
-  List<SongData> unshuffledList = [];
+  bool get shuffle => _queue.shuffle;
 
   static PlayerHandler get instance => _playerHandler;
 
@@ -42,10 +39,10 @@ class PlayerHandler extends BaseAudioHandler
   SongData? get playingSong => _playing;
   Duration get getDuration => _duration;
   Duration get getPosition => _position;
-  List<SongData> get getQueuedSongs => _songQueue;
-  List<SongData> get getPlayNextSongs => _playNext;
-  List<SongData> get getCompleteQueue => _calculateCompleteQueue();
-  int get getPlayingIndex => playingIndex;
+  List<SongData> get getQueuedSongs => _queue.songs;
+  List<SongData> get getPlayNextSongs => _queue.playNext;
+  List<SongData> get getCompleteQueue => _queue.complete;
+  int get getPlayingIndex => _queue.index;
   PlayingContext? get getPlayingContext => _playingContext;
 
   factory PlayerHandler() {
@@ -110,75 +107,27 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   void addToQueue(SongData data) {
-    _playNext.add(data);
+    _queue.add(data);
     notifyListeners();
   }
 
   void addAlbumToQueue(AlbumData album) {
-    album.songList.forEach(_playNext.add);
+    _queue.addAll(album.songList);
     notifyListeners();
-  }
-
-  List<SongData> _calculateCompleteQueue() {
-    List<SongData> out = [];
-
-    try {
-      for (int i = 0; i < playingIndex; i++) {
-        out.add(_songQueue[i]);
-      }
-
-      _playNext.forEach(out.add);
-
-      for (int i = playingIndex; i < _songQueue.length; i++) {
-        out.add(_songQueue[i]);
-      }
-    } catch (_) {}
-
-    return out;
   }
 
   void playSongList(PlayingContext playingContext, int index) {
     try {
+      final song = _queue.start(playingContext.getSongs, index);
       _playingContext = playingContext;
-
-      unshuffledList = List.from(playingContext.getSongs);
-      playingIndex = index;
-      _songQueue.removeRange(0, _songQueue.length);
-      _songQueue.addAll(playingContext.getSongs);
-      _playNow(playingContext.getSongs[index]);
-
-      if (shuffle) {
-        _shuffleQueue();
-      }
+      _playNow(song);
       notifyListeners();
     } catch (_) {}
   }
 
   void switchShuffleMode(bool shuffle) {
     try {
-      this.shuffle = shuffle;
-
-      if (shuffle) {
-        _shuffleQueue();
-      } else {
-        _songQueue = List.from(unshuffledList);
-        playingIndex = _songQueue.indexOf(_playing!);
-      }
-
-      notifyListeners();
-    } catch (_) {}
-  }
-
-  void _shuffleQueue() {
-    try {
-      SongData? prevSong = playingSong;
-
-      _songQueue.removeAt(playingIndex);
-      _songQueue.shuffle();
-
-      _songQueue = [prevSong!, ..._songQueue];
-      playingIndex = 0;
-
+      _queue.setShuffle(shuffle);
       notifyListeners();
     } catch (_) {}
   }
@@ -278,43 +227,12 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   Future<void> next() async {
-    try {
-      if (_playNext.isNotEmpty) {
-        _playNow(_playNext[0]);
-        _playNext.removeAt(0);
-      } else {
-        playingIndex++;
-
-        if (_songQueue.length > playingIndex) {
-          _playNow(_songQueue[playingIndex]);
-        }
-      }
-    } catch (_) {}
+    final song = _queue.next();
+    if (song != null) _playNow(song);
   }
 
   List<SongData> getLastPlayingSongs() {
-    List<SongData> out = [];
-
-    try {
-      if (_playing != null) {
-        int index = _songQueue.indexOf(_playing!);
-
-        if (index != -1 && index != 0) {
-          out.add(_songQueue[index - 1]);
-          out.add(_playing!);
-        }
-
-        if (_playNext.isEmpty) {
-          if (_songQueue.length > index) {
-            out.add(_songQueue[index + 1]);
-          }
-        } else {
-          out.add(_playNext[0]);
-        }
-      }
-    } catch (_) {}
-
-    return out;
+    return _queue.nearby();
   }
 
   @override
@@ -323,15 +241,8 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   void previous() async {
-    try {
-      if (playingIndex != 0) {
-        playingIndex--;
-      }
-
-      if (_songQueue.isNotEmpty) {
-        _playNow(_songQueue[playingIndex]);
-      }
-    } catch (_) {}
+    final song = _queue.previous();
+    if (song != null) _playNow(song);
   }
 
   @override
