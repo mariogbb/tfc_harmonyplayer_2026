@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:player/model/playlist.dart';
 
-import 'package:player/data/data.dart';
+import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:provider/provider.dart';
 
 class PlaylistDialogs {
   static void createPlaylistPopup(BuildContext context) {
@@ -43,7 +44,7 @@ class PlaylistDialogs {
                         if (text.isEmpty) {
                           setState(() => error = true);
                         } else {
-                          PlayerData().createPlaylist(text);
+                          context.read<PlaylistController>().create(text);
                           Navigator.pop(context);
                         }
                       },
@@ -73,7 +74,7 @@ class PlaylistDialogs {
                         if (text.isEmpty) {
                           setState(() => error = true);
                         } else {
-                          PlayerData().createPlaylist(text);
+                          context.read<PlaylistController>().create(text);
                           Navigator.pop(context);
                         }
                       },
@@ -127,7 +128,10 @@ class PlaylistDialogs {
                         if (text.isEmpty) {
                           setState(() => error = true);
                         } else {
-                          PlayerData().renamePlaylist(text, playlist);
+                          context.read<PlaylistController>().rename(
+                            text,
+                            playlist,
+                          );
                           Navigator.pop(context);
                         }
                       },
@@ -157,7 +161,10 @@ class PlaylistDialogs {
                         if (text.isEmpty) {
                           setState(() => error = true);
                         } else {
-                          PlayerData().renamePlaylist(text, playlist);
+                          context.read<PlaylistController>().rename(
+                            text,
+                            playlist,
+                          );
                           Navigator.pop(context);
                         }
                       },

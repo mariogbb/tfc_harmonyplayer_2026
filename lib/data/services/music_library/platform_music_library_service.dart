@@ -9,7 +9,7 @@ class PlatformMusicLibraryService implements MusicLibraryService {
   @override
   Future<MusicLibrarySnapshot> scan() async {
     if (await Permission.storage.isDenied) {
-      return const MusicLibrarySnapshot(songs: [], albums: [], artists: []);
+      throw const MusicPermissionDenied();
     }
 
     final trace = FirebasePerformance.instance.newTrace('song-load');

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -75,7 +76,14 @@ Future<void> _initializeFirebase() async {
 
   try {
     await FirebaseAuth.instance.signInAnonymously();
-  } on FirebaseAuthException catch (_) {}
+  } on FirebaseAuthException catch (error, stack) {
+    developer.log(
+      'Anonymous sign-in failed; continuing without it.',
+      name: 'startup',
+      error: error,
+      stackTrace: stack,
+    );
+  }
 
   try {
     final remoteConfig = FirebaseRemoteConfig.instance;
@@ -90,5 +98,12 @@ Future<void> _initializeFirebase() async {
       await remoteConfig.activate();
     });
     await remoteConfig.fetchAndActivate();
-  } on FirebaseException catch (_) {}
+  } on FirebaseException catch (error, stack) {
+    developer.log(
+      'Remote configuration failed; using defaults.',
+      name: 'startup',
+      error: error,
+      stackTrace: stack,
+    );
+  }
 }

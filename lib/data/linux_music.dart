@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:developer' as developer;
 
 import 'package:path/path.dart' as path;
 import 'package:player/model/library_metadata.dart';
@@ -107,10 +108,18 @@ class LinuxMusicLibrary {
                   int.tryParse('${tags['track'] ?? ''}'.split('/').first) ?? 0,
             ),
           );
-        } on FileSystemException catch (_) {}
+        } on FileSystemException catch (error, stack) {
+          developer.log(
+            'Could not read a music file',
+            name: 'music_library',
+            error: error,
+            stackTrace: stack,
+          );
+        }
       }
-    } on FileSystemException catch (_) {
-      // Return files already discovered if a directory is inaccessible.
+    } on FileSystemException {
+      // Report an incomplete scan instead of presenting it as a complete library.
+      rethrow;
     }
     return songs;
   }

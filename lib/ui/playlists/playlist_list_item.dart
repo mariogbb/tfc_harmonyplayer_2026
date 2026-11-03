@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:player/data/data.dart';
+import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:provider/provider.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/l10n/app_localizations.dart';
 
@@ -53,7 +54,7 @@ class PlaylistItem extends StatelessWidget {
         onSelected: (value) {
           switch (value) {
             case 1:
-              PlayerData.instance.deletePlaylist(playlist);
+              context.read<PlaylistController>().delete(playlist);
               break;
 
             case 2:

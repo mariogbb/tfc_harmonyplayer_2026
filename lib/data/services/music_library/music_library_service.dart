@@ -17,6 +17,10 @@ abstract class MusicLibraryService {
   Future<MusicLibrarySnapshot> scan();
 }
 
+class MusicPermissionDenied implements Exception {
+  const MusicPermissionDenied();
+}
+
 List<SongMetadata> filterLibrarySongs(
   List<SongMetadata> songs, {
   required bool smartFilterEnabled,

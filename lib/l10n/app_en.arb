@@ -143,5 +143,10 @@
 	"sort_by": "Sort by",
 	"search": "Search",
 	"nothing_found": "Nothing found",
-	"pick_a_color": "Pick a color"
+	"pick_a_color": "Pick a color",
+	"library_load_error": "Unable to load the music library. Try reloading.",
+	"library_permission_error": "Music access was denied. Allow it in system settings, then reload.",
+	"playlist_load_error": "Unable to update playlists. Try reloading.",
+	"playback_error": "Playback failed. Please try again.",
+	"startup_error": "Harmony Player could not start. Close and reopen the app. If the problem persists, check its configuration and storage access."
 }

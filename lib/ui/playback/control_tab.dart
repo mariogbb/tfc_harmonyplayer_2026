@@ -1,4 +1,3 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
@@ -10,6 +9,7 @@ import 'package:player/model/song.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/ui/core/generic_artwork.dart';
+import 'package:player/ui/playlists/playlist_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:player/utils/extensions.dart';
 
@@ -42,9 +42,10 @@ class PlayerControlTabState extends State<PlayerControlTab>
     bool liked = false;
 
     try {
-      PlaylistData playlistData = widget.playerData.playlists.firstWhere(
-        (element) => element.id == 1,
-      );
+      PlaylistData playlistData = context
+          .read<PlaylistController>()
+          .playlists
+          .firstWhere((element) => element.id == 1);
 
       liked = playlistData.songs.contains(data);
     } catch (_) {}
@@ -181,7 +182,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
   Widget pauseSongButton(bool paused) {
     return IconButton(
       onPressed: () {
-        if (widget.handler.player.state == PlayerState.paused) {
+        if (widget.handler.isPaused) {
           widget.handler.play();
         } else {
           widget.handler.pause();
@@ -332,29 +333,26 @@ class PlayerControlTabState extends State<PlayerControlTab>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Consumer<PlayerHandler>(
-                    builder: (context, value, child) {
+                  Consumer2<PlayerHandler, PlaylistController>(
+                    builder: (context, value, playlists, child) {
                       return IconButton(
                         onPressed: () async {
-                          PlaylistData playlistData = widget
-                              .playerData
-                              .playlists
+                          PlaylistData playlistData = playlists.playlists
                               .firstWhere((element) => element.id == 1);
 
                           if (value.playingSong != null) {
                             if (_isLiked(value.playingSong)) {
-                              widget.playerData.removeSongFromPlaylist(
+                              await playlists.removeSong(
                                 playlistData,
                                 value.playingSong!,
                               );
                             } else {
-                              widget.playerData.addSongToPlaylist(
+                              await playlists.addSong(
                                 playlistData,
                                 value.playingSong!,
                               );
                             }
                           }
-                          setState(() {});
                         },
                         icon: (_isLiked(value.playingSong))
                             ? Icon(
@@ -450,27 +448,27 @@ class PlayerControlTabState extends State<PlayerControlTab>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Consumer<PlayerHandler>(
-              builder: (context, value, child) {
+            Consumer2<PlayerHandler, PlaylistController>(
+              builder: (context, value, playlists, child) {
                 return IconButton(
                   onPressed: () async {
-                    PlaylistData playlistData = widget.playerData.playlists
-                        .firstWhere((element) => element.id == 1);
+                    PlaylistData playlistData = playlists.playlists.firstWhere(
+                      (element) => element.id == 1,
+                    );
 
                     if (value.playingSong != null) {
                       if (_isLiked(value.playingSong)) {
-                        widget.playerData.removeSongFromPlaylist(
+                        await playlists.removeSong(
                           playlistData,
                           value.playingSong!,
                         );
                       } else {
-                        widget.playerData.addSongToPlaylist(
+                        await playlists.addSong(
                           playlistData,
                           value.playingSong!,
                         );
                       }
                     }
-                    setState(() {});
                   },
                   icon: (_isLiked(value.playingSong))
                       ? Icon(
@@ -625,7 +623,17 @@ class PlayerControlTabState extends State<PlayerControlTab>
         },
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child: (context.watch<PlayerHandler>().playingSong != null)
+          child: (context.watch<PlayerHandler>().lastError != null)
+              ? Material(
+                  child: ListTile(
+                    title: Text(AppLocalizations.of(context)!.playback_error),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: widget.handler.retry,
+                    ),
+                  ),
+                )
+              : (context.watch<PlayerHandler>().playingSong != null)
               ? Container(
                   color: (_opened)
                       ? Theme.of(context).primaryColor.withAlpha(50)
@@ -694,7 +702,17 @@ class PlayerControlTabState extends State<PlayerControlTab>
       },
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 500),
-        child: (context.watch<PlayerHandler>().playingSong != null)
+        child: (context.watch<PlayerHandler>().lastError != null)
+            ? Material(
+                child: ListTile(
+                  title: Text(AppLocalizations.of(context)!.playback_error),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: widget.handler.retry,
+                  ),
+                ),
+              )
+            : (context.watch<PlayerHandler>().playingSong != null)
             ? Container(
                 color: Theme.of(context).primaryColor.withAlpha(50),
                 key: const Key("scrollable_detector"),

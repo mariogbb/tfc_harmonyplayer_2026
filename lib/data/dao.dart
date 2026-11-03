@@ -29,28 +29,36 @@ class PlayerDatabase {
       onCreate: ((db, version) async {
         // Albums table
         await db.execute(
-            "CREATE TABLE ALBUMS(ID INT UNSIGNED NOT NULL,URL TEXT NULL,PRIMARY KEY (ID))");
+          "CREATE TABLE ALBUMS(ID INT UNSIGNED NOT NULL,URL TEXT NULL,PRIMARY KEY (ID))",
+        );
         // Artist table
         await db.execute(
-            "CREATE TABLE ARTISTS(ID INT UNSIGNED NOT NULL,URL TEXT NULL,PRIMARY KEY (ID))");
+          "CREATE TABLE ARTISTS(ID INT UNSIGNED NOT NULL,URL TEXT NULL,PRIMARY KEY (ID))",
+        );
         // Playlist table
         await db.execute(
-            "CREATE TABLE PLAYLISTS(ID INTEGER PRIMARY KEY AUTOINCREMENT,PLAYLIST_NAME VARCHAR(50) NOT NULL)");
-        await db
-            .execute("CREATE UNIQUE INDEX AK_NAME ON PLAYLISTS(PLAYLIST_NAME)");
+          "CREATE TABLE PLAYLISTS(ID INTEGER PRIMARY KEY AUTOINCREMENT,PLAYLIST_NAME VARCHAR(50) NOT NULL)",
+        );
+        await db.execute(
+          "CREATE UNIQUE INDEX AK_NAME ON PLAYLISTS(PLAYLIST_NAME)",
+        );
         // Songs table
         await db.execute(
-            "CREATE TABLE SONGS(ID INT UNSIGNED, PLAYEDTIME INT UNSIGNED, PRIMARY KEY (ID))");
+          "CREATE TABLE SONGS(ID INT UNSIGNED, PLAYEDTIME INT UNSIGNED, PRIMARY KEY (ID))",
+        );
         // Playlist songs table
         await db.execute(
-            "CREATE TABLE PLAYLIST_SONGS(SONG_ID INT UNSIGNED NOT NULL,PLAYLIST_ID INT UNSIGNED NOT NULL,FOREIGN KEY (PLAYLIST_ID) REFERENCES PLAYLISTS (ID) ON DELETE CASCADE ON UPDATE CASCADE)");
+          "CREATE TABLE PLAYLIST_SONGS(SONG_ID INT UNSIGNED NOT NULL,PLAYLIST_ID INT UNSIGNED NOT NULL,FOREIGN KEY (PLAYLIST_ID) REFERENCES PLAYLISTS (ID) ON DELETE CASCADE ON UPDATE CASCADE)",
+        );
         // Liked songs playlist
         await db.insert("PLAYLISTS", {"PLAYLIST_NAME": "Liked songs"});
         // Rankings
         await db.execute(
-            "CREATE TABLE RANKINGS(ID INTEGER PRIMARY KEY AUTOINCREMENT, RANKING_DATE VARCHAR(25), RANKING_TYPE INT UNSIGNED)");
+          "CREATE TABLE RANKINGS(ID INTEGER PRIMARY KEY AUTOINCREMENT, RANKING_DATE VARCHAR(25), RANKING_TYPE INT UNSIGNED)",
+        );
         await db.execute(
-            "CREATE TABLE RANKINGS_SONGS(SONG_ID INT UNSIGNED NOT NULL, RANKING_ID INT UNSIGNED NOT NULL,FOREIGN KEY (RANKING_ID) REFERENCES RANKINGS (ID) ON DELETE CASCADE ON UPDATE CASCADE)");
+          "CREATE TABLE RANKINGS_SONGS(SONG_ID INT UNSIGNED NOT NULL, RANKING_ID INT UNSIGNED NOT NULL,FOREIGN KEY (RANKING_ID) REFERENCES RANKINGS (ID) ON DELETE CASCADE ON UPDATE CASCADE)",
+        );
       }),
       version: 2,
     );
@@ -59,71 +67,62 @@ class PlayerDatabase {
   PlayerDatabase.internal();
 
   Future<bool> findSongInDatabase(int id) async {
-    bool out = false;
-
-    try {
-      List<Map> result = await database.query("SONGS",
-          columns: ["ID"], where: "ID = ?", whereArgs: [id]);
-
-      out = result.isNotEmpty;
-    } catch (_) {}
-
-    return out;
+    final result = await database.query(
+      "SONGS",
+      columns: ["ID"],
+      where: "ID = ?",
+      whereArgs: [id],
+    );
+    return result.isNotEmpty;
   }
 
-  void addSongDuration(int id, Duration duration) async {
-    try {
-      Duration previousTime = await getSongPlayedTime(id);
-
-      duration += previousTime;
-      database.insert("SONGS", {"ID": id, "PLAYEDTIME": duration.inSeconds},
-          conflictAlgorithm: ConflictAlgorithm.replace);
-    } catch (_) {}
+  Future<void> addSongDuration(int id, Duration duration) async {
+    final previousTime = await getSongPlayedTime(id);
+    await database.insert("SONGS", {
+      "ID": id,
+      "PLAYEDTIME": (duration + previousTime).inSeconds,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<Duration> getSongPlayedTime(int id) async {
-    Duration out = Duration.zero;
-
-    try {
-      List<Map> result = await database.query("SONGS",
-          columns: ["PLAYEDTIME"], where: "ID = ?", whereArgs: [id.toString()]);
-
-      int seconds = result.first["PLAYEDTIME"];
-
-      out = Duration(seconds: seconds);
-    } catch (_) {}
-
-    return out;
+    final result = await database.query(
+      "SONGS",
+      columns: ["PLAYEDTIME"],
+      where: "ID = ?",
+      whereArgs: [id],
+    );
+    if (result.isEmpty) return Duration.zero;
+    return Duration(seconds: result.first["PLAYEDTIME"] as int);
   }
 
   Future<List<Ranking>> loadRankings() async {
-    List<Ranking> rankingList = [];
+    final rankingList = <Ranking>[];
+    final songsById = {
+      for (final song in data.songList) song.id.toString(): song,
+    };
+    final rankingQuery = await database.query(
+      "RANKINGS",
+      columns: ["ID", "RANKING_DATE"],
+    );
 
-    try {
-      List<Map> rankingQuery =
-          await database.query("RANKINGS", columns: ["ID", "RANKING_DATE"]);
+    for (var el in rankingQuery) {
+      final songs = <SongData>[];
 
-      for (var el in rankingQuery) {
-        List<SongData> songs = [];
-
-        List<Map> songsQuery = await database.query("RANKINGS_SONGS",
-            columns: ["SONG_ID"],
-            where: "RANKING_ID == ?",
-            whereArgs: [el["ID"]]);
-        for (var songElement in songsQuery) {
-          try {
-            SongData song = data.songList.firstWhere((dataElement) =>
-                dataElement.id.toString() == songElement["SONG_ID"].toString());
-            songs.add(song);
-          } catch (_) {}
-        }
-
-        rankingList
-            .add(Ranking(el["ID"], songs, el["RANKING_DATE"].toString()));
+      List<Map> songsQuery = await database.query(
+        "RANKINGS_SONGS",
+        columns: ["SONG_ID"],
+        where: "RANKING_ID == ?",
+        whereArgs: [el["ID"]],
+      );
+      for (var songElement in songsQuery) {
+        final song = songsById[songElement["SONG_ID"].toString()];
+        if (song != null) songs.add(song);
       }
-    } catch (_) {}
 
+      rankingList.add(
+        Ranking(el["ID"] as int, songs, el["RANKING_DATE"].toString()),
+      );
+    }
     return rankingList;
   }
-
 }

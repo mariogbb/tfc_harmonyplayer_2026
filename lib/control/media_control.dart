@@ -1,11 +1,10 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/widgets.dart';
+import 'package:player/control/audio_backend.dart';
 import 'package:player/control/playback_queue.dart';
 import 'package:player/data/dao.dart';
-import 'package:player/data/data.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/play_context.dart';
 
@@ -13,10 +12,16 @@ import '../model/song.dart';
 
 class PlayerHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler, ChangeNotifier {
-  static final PlayerHandler _playerHandler = PlayerHandler.internal();
+  static final PlayerHandler _playerHandler = PlayerHandler.withBackend(
+    AudioplayersBackend(),
+    PlayerDatabase.instance.addSongDuration,
+  );
 
-  final PlayerData data = PlayerData();
-  final AudioPlayer player = AudioPlayer(playerId: 'audio_player');
+  final AudioBackend backend;
+  final Future<void> Function(int, Duration) savePlayedTime;
+  final List<StreamSubscription<dynamic>> _subscriptions = [];
+  Object? lastError;
+  int _errorGeneration = 0;
   bool _disposed = false;
 
   // Queues and lists to add items to play
@@ -49,33 +54,69 @@ class PlayerHandler extends BaseAudioHandler
     return _playerHandler;
   }
 
-  PlayerHandler.internal() {
-    player.onPlayerStateChanged.map(_transformEvent).pipe(playbackState);
-
-    _paused = true;
-    player.onPlayerComplete.listen(_songFinished);
-    player.onDurationChanged.listen(_durationChanged);
-    player.onPositionChanged.listen(_positionChanged);
-
-    player.setPlayerMode(PlayerMode.mediaPlayer);
+  PlayerHandler.withBackend(this.backend, this.savePlayedTime) {
+    _subscriptions.add(
+      backend.states.listen(
+        (state) => playbackState.add(_transformEvent(state)),
+        onError: _reportError,
+      ),
+    );
+    _subscriptions.add(
+      backend.completed.listen(_songFinished, onError: _reportError),
+    );
+    _subscriptions.add(
+      backend.durations.listen(_durationChanged, onError: _reportError),
+    );
+    _subscriptions.add(
+      backend.positions.listen(_positionChanged, onError: _reportError),
+    );
+    unawaited(_run(backend.initialize));
   }
 
-  PlaybackState _transformEvent(PlayerState state) {
+  void _reportError(Object error, [StackTrace? stack]) {
+    _errorGeneration++;
+    lastError = error;
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'audio playback',
+      ),
+    );
+    notifyListeners();
+  }
+
+  Future<bool> _run(Future<void> Function() action) async {
+    final generation = _errorGeneration;
+    try {
+      await action();
+      if (generation == _errorGeneration && lastError != null) {
+        lastError = null;
+        notifyListeners();
+      }
+      return true;
+    } catch (error, stack) {
+      _reportError(error, stack);
+      return false;
+    }
+  }
+
+  PlaybackState _transformEvent(AudioBackendState state) {
     return PlaybackState(
       controls: [
         MediaControl.skipToPrevious,
-        if (player.state == PlayerState.playing) MediaControl.pause,
-        if (player.state == PlayerState.paused) MediaControl.play,
+        if (state == AudioBackendState.playing) MediaControl.pause,
+        if (state != AudioBackendState.playing) MediaControl.play,
         MediaControl.skipToNext,
       ],
       systemActions: const {
         MediaAction.seek,
         MediaAction.seekForward,
         MediaAction.seekBackward,
-        MediaAction.playPause
+        MediaAction.playPause,
       },
       androidCompactActionIndices: const [0, 1, 2],
-      playing: player.state == PlayerState.playing,
+      playing: state == AudioBackendState.playing,
     );
   }
 
@@ -93,22 +134,29 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   void _positionChanged(Duration pos) {
-    try {
-      int diff = pos.inSeconds - _position.inSeconds;
+    int diff = pos.inSeconds - _position.inSeconds;
 
-      if (_prevDiff == (diff - 1) || _prevDiff == (diff + 1)) {
-        _prevDiff = diff;
-        _playedTime += const Duration(seconds: 1);
-      }
+    if (_prevDiff == (diff - 1) || _prevDiff == (diff + 1)) {
+      _prevDiff = diff;
+      _playedTime += const Duration(seconds: 1);
+    }
 
-      _position = pos;
-      notifyListeners();
-    } catch (_) {}
+    _position = pos;
+    notifyListeners();
   }
 
   void addToQueue(SongData data) {
     _queue.add(data);
     notifyListeners();
+  }
+
+  void retry() {
+    final song = _playing;
+    if (song != null) {
+      _playNow(song);
+    } else {
+      unawaited(play());
+    }
   }
 
   void addAlbumToQueue(AlbumData album) {
@@ -122,14 +170,18 @@ class PlayerHandler extends BaseAudioHandler
       _playingContext = playingContext;
       _playNow(song);
       notifyListeners();
-    } catch (_) {}
+    } catch (error, stack) {
+      _reportError(error, stack);
+    }
   }
 
   void switchShuffleMode(bool shuffle) {
     try {
       _queue.setShuffle(shuffle);
       notifyListeners();
-    } catch (_) {}
+    } catch (error, stack) {
+      _reportError(error, stack);
+    }
   }
 
   // Player controls
@@ -137,7 +189,9 @@ class PlayerHandler extends BaseAudioHandler
     try {
       if (_playing != null && _playedTime != Duration.zero) {
         // Save played time
-        PlayerDatabase.instance.addSongDuration(_playing!.id, _playedTime);
+        final songId = _playing!.id;
+        final playedTime = _playedTime;
+        unawaited(_run(() => savePlayedTime(songId, playedTime)));
         _playing!.playedTime += _playedTime;
       }
 
@@ -147,9 +201,17 @@ class PlayerHandler extends BaseAudioHandler
       _playing = song;
       _paused = false;
 
-      player
-          .play(DeviceFileSource(song.model.data))
-          .then((_) => player.seek(Duration.zero));
+      unawaited(
+        _run(() async {
+          await backend.playFile(song.model.data);
+          await backend.seek(Duration.zero);
+        }).then((success) {
+          if (!success && identical(_playing, song)) {
+            _paused = true;
+            notifyListeners();
+          }
+        }),
+      );
 
       String? imageUrl = song.albumModel.imageURL;
 
@@ -159,28 +221,32 @@ class PlayerHandler extends BaseAudioHandler
         file = Uri.parse(imageUrl);
 
         if (file != Uri.file("")) {
-          mediaItem.add(MediaItem(
-            id: song.id.toString(),
-            title: song.title,
-            album: song.album,
-            artUri: file,
-            artist: song.artist,
-            displayTitle: song.title,
-            duration: song.duration,
-            playable: true,
-            extras: {"loadThumbnailUri": true},
-          ));
+          mediaItem.add(
+            MediaItem(
+              id: song.id.toString(),
+              title: song.title,
+              album: song.album,
+              artUri: file,
+              artist: song.artist,
+              displayTitle: song.title,
+              duration: song.duration,
+              playable: true,
+              extras: {"loadThumbnailUri": true},
+            ),
+          );
         } else {
-          mediaItem.add(MediaItem(
-            id: song.id.toString(),
-            title: song.title,
-            album: song.album,
-            artist: song.artist,
-            displayTitle: song.title,
-            duration: song.duration,
-            playable: true,
-            extras: {"loadThumbnailUri": true},
-          ));
+          mediaItem.add(
+            MediaItem(
+              id: song.id.toString(),
+              title: song.title,
+              album: song.album,
+              artist: song.artist,
+              displayTitle: song.title,
+              duration: song.duration,
+              playable: true,
+              extras: {"loadThumbnailUri": true},
+            ),
+          );
         }
       } else {
         mediaItem.add(
@@ -192,27 +258,26 @@ class PlayerHandler extends BaseAudioHandler
             displayTitle: song.title,
             duration: song.duration,
             playable: true,
-            artUri: Uri.file(song.model.uri!, windows: false),
             extras: {"loadThumbnailUri": true},
           ),
         );
       }
 
       notifyListeners();
-    } catch (_) {}
+    } catch (error, stack) {
+      _reportError(error, stack);
+    }
   }
 
   @override
   Future<void> play() async {
-    player.resume();
-    _paused = false;
+    if (await _run(backend.resume)) _paused = false;
     notifyListeners();
   }
 
   @override
   Future<void> pause() async {
-    player.pause();
-    _paused = true;
+    if (await _run(backend.pause)) _paused = true;
     notifyListeners();
   }
 
@@ -237,7 +302,7 @@ class PlayerHandler extends BaseAudioHandler
 
   @override
   Future<void> seek(Duration position) async {
-    player.seek(position);
+    await _run(() => backend.seek(position));
   }
 
   void previous() async {
@@ -248,6 +313,10 @@ class PlayerHandler extends BaseAudioHandler
   @override
   void dispose() {
     _disposed = true;
+    for (final subscription in _subscriptions) {
+      unawaited(subscription.cancel());
+    }
+    unawaited(backend.dispose());
     super.dispose();
   }
 

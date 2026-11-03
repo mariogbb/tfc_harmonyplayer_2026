@@ -25,6 +25,12 @@ class HarmonyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: PlayerData.instance),
+        ChangeNotifierProvider.value(
+          value: PlayerData.instance.playlistController,
+        ),
+        ChangeNotifierProvider.value(
+          value: PlayerData.instance.libraryController,
+        ),
         ChangeNotifierProvider.value(value: PlayerData.instance.handler),
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider.value(value: PlayerSettings.instance),

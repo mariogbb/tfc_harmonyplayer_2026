@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/foundation.dart';
 import 'package:player/data/repositories/playlist_repository.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
@@ -13,6 +13,7 @@ import 'package:player/ui/playlists/playlist_controller.dart';
 class FakePlaylistRepository implements PlaylistRepository {
   final events = <String>[];
   bool allowRename = true;
+  bool failAdd = false;
   Completer<void>? pendingAdd;
 
   @override
@@ -29,6 +30,7 @@ class FakePlaylistRepository implements PlaylistRepository {
   @override
   Future<void> addSong(int playlistId, int songId) async {
     events.add('add:$playlistId:$songId');
+    if (failAdd) throw StateError('database failure');
     await pendingAdd?.future;
   }
 
@@ -82,7 +84,7 @@ void main() {
     expect((await controller.create('New'))!.name, 'New');
     await controller.delete(playlist);
     expect(controller.playlists.map((p) => p.name), ['New']);
-    expect(notifications, 6);
+    expect(notifications, 7);
   });
 
   test('does not notify or change state after disposal', () async {
@@ -94,5 +96,18 @@ void main() {
     repository.pendingAdd!.complete();
     await operation;
     expect(playlist.songs, isEmpty);
+  });
+
+  test('retains playlist state and exposes persistence errors', () async {
+    final repository = FakePlaylistRepository()..failAdd = true;
+    final controller = PlaylistController(repository);
+    addTearDown(controller.dispose);
+    final oldHandler = FlutterError.onError;
+    FlutterError.onError = (_) {};
+    addTearDown(() => FlutterError.onError = oldHandler);
+    final playlist = PlaylistData(id: 1, name: 'Saved', songs: []);
+    await controller.addSong(playlist, makeSong());
+    expect(playlist.songs, isEmpty);
+    expect(controller.error, isA<StateError>());
   });
 }

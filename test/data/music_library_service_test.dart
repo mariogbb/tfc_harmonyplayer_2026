@@ -4,6 +4,9 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/linux_music.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/repositories/artwork_repository.dart';
+import 'package:player/data/services/artwork/deezer_artwork_service.dart';
+import 'package:player/data/services/artwork/local_artwork_service.dart';
 import 'package:player/data/services/music_library/audio_query_mapper.dart';
 import 'package:player/model/library_metadata.dart';
 import 'package:player/data/services/music_library/desktop_music_library_service.dart';
@@ -18,6 +21,16 @@ class FakeMusicLibrary implements MusicLibraryService {
     scans++;
     return const MusicLibrarySnapshot(songs: [], albums: [], artists: []);
   }
+}
+
+class UnusedArtworkCache implements ArtworkCache {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class UnusedArtworkSearch implements ArtworkSearchService {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeDesktopScanner extends LinuxMusicLibrary {
@@ -69,6 +82,13 @@ void main() {
             service: library,
             loadPlayedTime: (_) async => Duration.zero,
           ),
+        )
+        ..configureArtwork(
+          ArtworkRepository(
+            cache: UnusedArtworkCache(),
+            search: UnusedArtworkSearch(),
+          ),
+          LocalArtworkService(),
         );
 
       addTearDown(data.dispose);

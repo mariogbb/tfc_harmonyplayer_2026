@@ -143,5 +143,10 @@
 	"sort_by": "Ordina per",
 	"search": "Ricerca",
 	"nothing_found": "Non è stato trovato nulla",
-	"pick_a_color": "Scegliere un colore"
+	"pick_a_color": "Scegliere un colore",
+	"library_load_error": "Impossibile caricare la libreria musicale. Prova a ricaricare.",
+	"library_permission_error": "Accesso alla musica negato. Consentilo nelle impostazioni di sistema e ricarica.",
+	"playlist_load_error": "Impossibile aggiornare le playlist. Prova a ricaricare.",
+	"playback_error": "Riproduzione non riuscita. Riprova.",
+	"startup_error": "Impossibile avviare Harmony Player. Chiudi e riapri l'app. Se il problema persiste, controlla la configurazione e l'accesso alla memoria."
 }

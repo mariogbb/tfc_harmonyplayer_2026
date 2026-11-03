@@ -1,9 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:player/app/app.dart';
-import 'package:player/app/bootstrap.dart';
+import 'package:player/app/startup_app.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  final showWelcome = await bootstrap();
-  runApp(HarmonyApp(showWelcome: showWelcome));
+  runApp(const StartupApp());
 }

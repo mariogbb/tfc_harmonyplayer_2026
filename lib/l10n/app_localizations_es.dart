@@ -384,4 +384,23 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pick_a_color => 'Escoge un color';
+
+  @override
+  String get library_load_error =>
+      'No se pudo cargar la biblioteca musical. Intenta recargarla.';
+
+  @override
+  String get library_permission_error =>
+      'Se denegó el acceso a la música. Permítelo en los ajustes del sistema y recarga.';
+
+  @override
+  String get playlist_load_error =>
+      'No se pudieron actualizar las listas. Intenta recargar.';
+
+  @override
+  String get playback_error => 'La reproducción falló. Inténtalo de nuevo.';
+
+  @override
+  String get startup_error =>
+      'Harmony Player no pudo iniciarse. Cierra y vuelve a abrir la aplicación. Si el problema continúa, revisa su configuración y acceso al almacenamiento.';
 }

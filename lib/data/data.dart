@@ -6,7 +6,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
-import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
@@ -14,6 +13,7 @@ import 'package:player/data/repositories/artwork_repository.dart';
 import 'package:player/data/repositories/playlist_repository.dart';
 import 'package:player/data/services/artwork/local_artwork_service.dart';
 import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:player/ui/library/library_controller.dart';
 
 class PlayerData extends ChangeNotifier {
   static final PlayerData _playerData = PlayerData.internal();
@@ -22,12 +22,14 @@ class PlayerData extends ChangeNotifier {
   late final List<SongData> songList = [];
   late final List<AlbumData> albumList = [];
   late final List<ArtistData> artistList = [];
-  late final List<PlaylistData> playlists = [];
   late final PlayerHandler handler;
   late MusicLibraryRepository _musicLibrary;
   late ArtworkRepository _artworkRepository;
   late LocalArtworkService _localArtwork;
+  LibraryController? _libraryController;
+  LibraryController get libraryController => _libraryController!;
   PlaylistController? _playlistController;
+  PlaylistController get playlistController => _playlistController!;
   bool _disposed = false;
 
   factory PlayerData() {
@@ -45,23 +47,32 @@ class PlayerData extends ChangeNotifier {
   void configureArtwork(ArtworkRepository artwork, LocalArtworkService local) {
     _artworkRepository = artwork;
     _localArtwork = local;
+    _libraryController?.removeListener(_onLibraryChanged);
+    _libraryController?.dispose();
+    _libraryController = LibraryController(
+      repository: _musicLibrary,
+      artworkRepository: _artworkRepository,
+      localArtwork: _localArtwork,
+      songs: songList,
+      albums: albumList,
+      artists: artistList,
+    )..addListener(_onLibraryChanged);
+  }
+
+  void _onLibraryChanged() {
+    if (!_disposed) notifyListeners();
   }
 
   void configurePlaylists(PlaylistRepository repository) {
-    _playlistController?.removeListener(_onPlaylistsChanged);
     _playlistController?.dispose();
-    _playlistController = PlaylistController(repository, playlists: playlists)
-      ..addListener(_onPlaylistsChanged);
-  }
-
-  void _onPlaylistsChanged() {
-    if (!_disposed) notifyListeners();
+    _playlistController = PlaylistController(repository);
   }
 
   @override
   void dispose() {
     _disposed = true;
-    _playlistController?.removeListener(_onPlaylistsChanged);
+    _libraryController?.removeListener(_onLibraryChanged);
+    _libraryController?.dispose();
     _playlistController?.dispose();
     super.dispose();
   }
@@ -85,90 +96,29 @@ class PlayerData extends ChangeNotifier {
     );
   }
 
-  void initState() async {
-    songList.clear();
-    albumList.clear();
-    artistList.clear();
-    playlists.clear();
-
-    await loadSongs();
-    await _playlistController!.load(songList);
-  }
-
-  Future<PlaylistData?> createPlaylist(String name) =>
-      _playlistController!.create(name);
-
-  Future<void> removeSongFromPlaylist(PlaylistData playlist, SongData data) =>
-      _playlistController!.removeSong(playlist, data);
-
-  Future<void> addSongToPlaylist(PlaylistData playlist, SongData data) =>
-      _playlistController!.addSong(playlist, data);
-
-  Future<void> renamePlaylist(String newName, PlaylistData playlist) =>
-      _playlistController!.rename(newName, playlist);
-
-  Future<void> deletePlaylist(PlaylistData playlist) =>
-      _playlistController!.delete(playlist);
-
-  Future<void> loadSongs() async {
-    final library = await _musicLibrary.load(
-      smartFilterEnabled: Settings.getValue<bool>(
-        'smartFilterEnabled',
-        defaultValue: true,
-      )!,
-      minimumDurationSeconds: Settings.getValue<double>(
-        'filterDuration',
-        defaultValue: 0,
-      )!.toInt(),
-    );
-    final localArtwork = await Future.wait(
-      library.albums.map((album) => _localArtwork.loadAlbumArtwork(album.id)),
-    );
-    for (var i = 0; i < library.albums.length; i++) {
-      final album = AlbumData(
-        library.albums[i],
-        artwork: localArtwork[i],
-        songs: songList,
-        artists: artistList,
+  Future<void> initState() async {
+    try {
+      if (await loadSongs()) await _playlistController!.load(songList);
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'music initialization',
+        ),
       );
-      albumList.add(album);
-      unawaited(_loadAlbumUrl(album));
-    }
-
-    for (final song in library.songs) {
-      try {
-        AlbumData album = albumList.firstWhere(
-          (element) => element.id == song.model.albumId,
-        );
-        songList.add(
-          SongData(
-            model: song.model,
-            albumModel: album,
-            playedTime: song.playedTime,
-            artists: artistList,
-          ),
-        );
-      } catch (_) {}
-    }
-
-    for (final model in library.artists) {
-      final artist = ArtistData(model, albums: albumList, songs: songList);
-      artistList.add(artist);
-      unawaited(_loadArtistUrl(artist));
+      if (!_disposed) libraryController.reportFailure(error);
     }
   }
 
-  Future<void> _loadAlbumUrl(AlbumData album) async {
-    final url = await _artworkRepository.albumUrl(album.id, album.name);
-    if (_disposed || !albumList.contains(album)) return;
-    album.imageURL = url;
-    if (url != null) notifyListeners();
-  }
-
-  Future<void> _loadArtistUrl(ArtistData artist) async {
-    final url = await _artworkRepository.artistUrl(artist.id, artist.name);
-    if (_disposed || !artistList.contains(artist)) return;
-    artist.imageURL = url;
-    if (url != null) notifyListeners();
-  }
+  Future<bool> loadSongs() => libraryController.load(
+    smartFilterEnabled: Settings.getValue<bool>(
+      'smartFilterEnabled',
+      defaultValue: true,
+    )!,
+    minimumDurationSeconds: Settings.getValue<double>(
+      'filterDuration',
+      defaultValue: 0,
+    )!.toInt(),
+  );
 }

@@ -143,5 +143,10 @@
 	"sort_by": "Ordenar por",
 	"search": "Búsqueda",
 	"nothing_found": "Non se atopou nada",
-	"pick_a_color": "Escolle unha cor"
+	"pick_a_color": "Escolle unha cor",
+	"library_load_error": "Non se puido cargar a biblioteca musical. Tenta recargala.",
+	"library_permission_error": "Denegouse o acceso á música. Permíteo nos axustes do sistema e recarga.",
+	"playlist_load_error": "Non se puideron actualizar as listas. Tenta recargar.",
+	"playback_error": "Fallou a reprodución. Téntao de novo.",
+	"startup_error": "Non se puido iniciar Harmony Player. Pecha e abre de novo a aplicación. Se o problema continúa, revisa a configuración e o acceso ao almacenamento."
 }

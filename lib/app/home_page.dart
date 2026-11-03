@@ -76,41 +76,55 @@ class _HomePageState extends State<HomePage>
   }
 
   void requestPermissions() async {
-    if (Platform.isLinux || Platform.isWindows) {
-      widget.playerData.initState();
-      return;
-    }
-    List<Permission> req = [];
+    try {
+      if (Platform.isLinux || Platform.isWindows) {
+        widget.playerData.initState();
+        return;
+      }
+      List<Permission> req = [];
 
-    var state = await Permission.storage.status;
+      var state = await Permission.storage.status;
 
-    if (state.isDenied) {
-      req.add(Permission.storage);
-    }
+      if (state.isDenied) {
+        req.add(Permission.storage);
+      }
 
-    state = await Permission.manageExternalStorage.status;
+      state = await Permission.manageExternalStorage.status;
+      if (!mounted) return;
 
-    if (state.isDenied) {
-      req.add(Permission.manageExternalStorage);
-    }
+      if (state.isDenied) {
+        req.add(Permission.manageExternalStorage);
+      }
 
-    if (req.isNotEmpty) {
-      await req.request();
+      if (req.isNotEmpty) {
+        await req.request();
 
-      state = await Permission.storage.status;
+        state = await Permission.storage.status;
+        if (!mounted) return;
 
-      if (state.isGranted) {
+        if (state.isGranted) {
+          widget.playerData.initState();
+        } else {
+          widget.playerData.libraryController.permissionDenied();
+        }
+      } else {
         widget.playerData.initState();
       }
-    } else {
-      widget.playerData.initState();
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'music permissions',
+        ),
+      );
+      if (mounted) widget.playerData.libraryController.reportFailure(error);
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    widget.playerData.handler.player.dispose();
     widget.playerData.handler.stop();
     widget.database.database.close();
     PlayerData.instance.handler.dispose();

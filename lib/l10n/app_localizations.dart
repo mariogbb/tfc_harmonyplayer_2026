@@ -839,6 +839,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a color'**
   String get pick_a_color;
+
+  /// No description provided for @library_load_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load the music library. Try reloading.'**
+  String get library_load_error;
+
+  /// No description provided for @library_permission_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Music access was denied. Allow it in system settings, then reload.'**
+  String get library_permission_error;
+
+  /// No description provided for @playlist_load_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update playlists. Try reloading.'**
+  String get playlist_load_error;
+
+  /// No description provided for @playback_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback failed. Please try again.'**
+  String get playback_error;
+
+  /// No description provided for @startup_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Harmony Player could not start. Close and reopen the app. If the problem persists, check its configuration and storage access.'**
+  String get startup_error;
 }
 
 class _AppLocalizationsDelegate

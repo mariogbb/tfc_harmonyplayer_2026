@@ -4,11 +4,12 @@ import 'package:player/model/album.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 
-import 'package:player/data/data.dart';
+import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:provider/provider.dart';
 
 class SongDialogs {
   static void addToPlaylistDialog(SongData song, BuildContext context) {
-    PlayerData data = PlayerData.instance;
+    final data = context.read<PlaylistController>();
     List<PlaylistData> playlists = data.playlists;
 
     final List<PlaylistData> playlistToAdd = [];
@@ -45,7 +46,7 @@ class SongDialogs {
                       ),
                       onPressed: () {
                         for (var element in playlistToAdd) {
-                          data.addSongToPlaylist(element, song);
+                          data.addSong(element, song);
                         }
                         Navigator.of(context).pop();
                       },
@@ -88,7 +89,7 @@ class SongDialogs {
   }
 
   static void addAlbumToPlaylistDialog(AlbumData album, BuildContext context) {
-    PlayerData data = PlayerData.instance;
+    final data = context.read<PlaylistController>();
     List<PlaylistData> playlists = data.playlists;
 
     final List<PlaylistData> playlistToAdd = [];
@@ -126,7 +127,7 @@ class SongDialogs {
                       onPressed: () {
                         for (var element in playlistToAdd) {
                           for (var song in album.songList) {
-                            data.addSongToPlaylist(element, song);
+                            data.addSong(element, song);
                           }
                         }
                         Navigator.of(context).pop();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:player/data/data.dart';
+import 'package:player/ui/library/library_controller.dart';
 import 'package:player/model/play_context.dart';
 import 'package:player/ui/library/songs/song_list.dart';
 import 'package:player/model/sort.dart';
@@ -20,8 +20,20 @@ class PlayerSongsTabState extends State<PlayerSongsTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<PlayerData>(
+    return Consumer<LibraryController>(
       builder: (context, value, child) {
+        if (value.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (value.error != null) {
+          return Center(
+            child: Text(
+              value.isPermissionDenied
+                  ? AppLocalizations.of(context)!.library_permission_error
+                  : AppLocalizations.of(context)!.library_load_error,
+            ),
+          );
+        }
         if (value.songList.isEmpty) {
           return Center(
             child: Text(AppLocalizations.of(context)!.no_song_found),
