@@ -13,6 +13,7 @@ import 'package:player/data/repositories/music_library_repository.dart';
 import 'package:player/data/repositories/artwork_repository.dart';
 import 'package:player/data/repositories/playlist_repository.dart';
 import 'package:player/data/services/artwork/local_artwork_service.dart';
+import 'package:player/ui/playlists/playlist_controller.dart';
 
 class PlayerData extends ChangeNotifier {
   static final PlayerData _playerData = PlayerData.internal();
@@ -26,7 +27,7 @@ class PlayerData extends ChangeNotifier {
   late MusicLibraryRepository _musicLibrary;
   late ArtworkRepository _artworkRepository;
   late LocalArtworkService _localArtwork;
-  late PlaylistRepository _playlistRepository;
+  PlaylistController? _playlistController;
   bool _disposed = false;
 
   factory PlayerData() {
@@ -47,12 +48,21 @@ class PlayerData extends ChangeNotifier {
   }
 
   void configurePlaylists(PlaylistRepository repository) {
-    _playlistRepository = repository;
+    _playlistController?.removeListener(_onPlaylistsChanged);
+    _playlistController?.dispose();
+    _playlistController = PlaylistController(repository, playlists: playlists)
+      ..addListener(_onPlaylistsChanged);
+  }
+
+  void _onPlaylistsChanged() {
+    if (!_disposed) notifyListeners();
   }
 
   @override
   void dispose() {
     _disposed = true;
+    _playlistController?.removeListener(_onPlaylistsChanged);
+    _playlistController?.dispose();
     super.dispose();
   }
 
@@ -82,61 +92,23 @@ class PlayerData extends ChangeNotifier {
     playlists.clear();
 
     await loadSongs();
-    List<PlaylistData> loadedPlaylists = await _playlistRepository.load(
-      songList,
-    );
-
-    loadedPlaylists.forEach(playlists.add);
-    notifyListeners();
+    await _playlistController!.load(songList);
   }
 
-  Future<PlaylistData?> createPlaylist(String name) async {
-    PlaylistData? newPlaylist;
+  Future<PlaylistData?> createPlaylist(String name) =>
+      _playlistController!.create(name);
 
-    if (playlists.where((element) => element.name == name).isEmpty) {
-      newPlaylist = await _playlistRepository.create(name);
+  Future<void> removeSongFromPlaylist(PlaylistData playlist, SongData data) =>
+      _playlistController!.removeSong(playlist, data);
 
-      if (newPlaylist != null) {
-        playlists.add(newPlaylist);
-      }
-    }
+  Future<void> addSongToPlaylist(PlaylistData playlist, SongData data) =>
+      _playlistController!.addSong(playlist, data);
 
-    notifyListeners();
+  Future<void> renamePlaylist(String newName, PlaylistData playlist) =>
+      _playlistController!.rename(newName, playlist);
 
-    return newPlaylist;
-  }
-
-  Future<void> removeSongFromPlaylist(
-    PlaylistData playlist,
-    SongData data,
-  ) async {
-    if (playlist.songs.contains(data)) {
-      await _playlistRepository.removeSong(playlist.id, data.id);
-      playlist.songs.remove(data);
-      notifyListeners();
-    }
-  }
-
-  Future<void> addSongToPlaylist(PlaylistData playlist, SongData data) async {
-    if (!playlist.songs.contains(data)) {
-      await _playlistRepository.addSong(playlist.id, data.id);
-      if (!playlist.songs.contains(data)) playlist.songs.add(data);
-      notifyListeners();
-    }
-  }
-
-  Future<void> renamePlaylist(String newName, PlaylistData playlist) async {
-    if (await _playlistRepository.rename(playlist.id, newName)) {
-      playlist.name = newName;
-      notifyListeners();
-    }
-  }
-
-  void deletePlaylist(PlaylistData playlist) async {
-    await _playlistRepository.delete(playlist.id);
-    playlists.remove(playlist);
-    notifyListeners();
-  }
+  Future<void> deletePlaylist(PlaylistData playlist) =>
+      _playlistController!.delete(playlist);
 
   Future<void> loadSongs() async {
     final library = await _musicLibrary.load(
