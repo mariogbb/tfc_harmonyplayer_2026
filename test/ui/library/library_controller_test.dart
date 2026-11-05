@@ -18,6 +18,34 @@ class FakeLibrary implements MusicLibraryRepository {
   }) => result.future;
 }
 
+class SequenceLibrary implements MusicLibraryRepository {
+  int calls = 0;
+  @override
+  Future<MusicLibrary> load({
+    required bool smartFilterEnabled,
+    required int minimumDurationSeconds,
+  }) async {
+    calls++;
+    return MusicLibrary(
+      songs: [
+        LibrarySong(
+          model: SongMetadata(
+            id: calls,
+            data: '/$calls.mp3',
+            title: 'Song',
+            albumId: 2,
+            artistId: 3,
+            duration: 1000,
+          ),
+          playedTime: Duration.zero,
+        ),
+      ],
+      albums: const [AlbumMetadata(id: 2, album: 'Album', artistId: 3)],
+      artists: const [ArtistMetadata(id: 3, artist: 'Artist')],
+    );
+  }
+}
+
 class FakeCache implements ArtworkCache {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -34,6 +62,24 @@ class FakeLocalArtwork extends LocalArtworkService {
 }
 
 void main() {
+  test('refresh keeps previous model relationships stable and exposes read-only lists', () async {
+    final controller = LibraryController(
+      repository: SequenceLibrary(),
+      artworkRepository: ArtworkRepository(
+        cache: FakeCache(),
+        search: FakeSearch(),
+      ),
+      localArtwork: FakeLocalArtwork(),
+    );
+    addTearDown(controller.dispose);
+    await controller.load(smartFilterEnabled: false, minimumDurationSeconds: 0);
+    final oldAlbum = controller.albumList.single;
+    final oldSong = controller.songList.single;
+    expect(() => controller.songList.clear(), throwsUnsupportedError);
+    await controller.load(smartFilterEnabled: false, minimumDurationSeconds: 0);
+    expect(controller.songList.single.id, 2);
+    expect(oldAlbum.songList.single, same(oldSong));
+  });
   test(
     'loads library state and connects songs to albums and artists',
     () async {

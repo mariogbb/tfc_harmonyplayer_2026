@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:player/data/services/artwork/deezer_artwork_service.dart';
 
 abstract class ArtworkCache {
@@ -33,8 +35,13 @@ class ArtworkRepository {
     String? cached;
     try {
       cached = await read();
-    } catch (_) {
-      // A cache failure should not prevent an online lookup.
+    } catch (error, stack) {
+      developer.log(
+        'Artwork cache read failed; trying the network.',
+        name: 'artwork',
+        error: error,
+        stackTrace: stack,
+      );
     }
     if (cached != null) return cached;
     try {
@@ -42,12 +49,23 @@ class ArtworkRepository {
       if (url != null) {
         try {
           await write(url);
-        } catch (_) {
-          // Artwork remains usable if caching fails.
+        } catch (error, stack) {
+          developer.log(
+            'Artwork cache write failed.',
+            name: 'artwork',
+            error: error,
+            stackTrace: stack,
+          );
         }
       }
       return url;
-    } catch (_) {
+    } catch (error, stack) {
+      developer.log(
+        'Online artwork lookup failed.',
+        name: 'artwork',
+        error: error,
+        stackTrace: stack,
+      );
       return null;
     }
   }

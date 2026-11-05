@@ -3,7 +3,8 @@ import 'package:fuzzysearch/fuzzysearch.dart';
 import 'package:player/ui/core/adaptive_layout.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/artist.dart';
-import 'package:player/data/data.dart';
+import 'package:player/ui/library/library_controller.dart';
+import 'package:provider/provider.dart';
 import 'package:player/model/play_context.dart';
 import 'package:player/model/song.dart';
 import 'package:player/ui/library/albums/album_list_item.dart';
@@ -24,11 +25,13 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
   List<ArtistData> foundArtists = [];
   List<AlbumData> foundAlbums = [];
   List<SearchFilters> activeFilters = [];
-  PlayerData playerData = PlayerData();
 
   String _text = "";
+  int _searchVersion = 0;
 
   void _search(String searchString) async {
+    final version = ++_searchVersion;
+    final library = context.read<LibraryController>();
     setState(() {
       _text = searchString;
     });
@@ -41,7 +44,7 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
 
     if (activeFilters.contains(SearchFilters.albums)) {
       final fuse = Fuzzy(
-        PlayerData.instance.albumList.map((e) => e.name).toList(),
+        library.albumList.map((e) => e.name).toList(),
         options: FuzzyOptions(
           tokenize: true,
           threshold: 0.4,
@@ -49,11 +52,12 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
         ),
       );
 
-      var result = await fuse.search(_text);
+      var result = await fuse.search(searchString);
+      if (!mounted || version != _searchVersion) return;
 
       for (var el in result) {
-        PlayerData.instance.albumList
-            .where((element) => identical(element.name, el.item))
+        library.albumList
+            .where((element) => element.name == el.item)
             .forEach(
               (element) => setState(() {
                 foundAlbums.add(element);
@@ -64,7 +68,7 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
 
     if (activeFilters.contains(SearchFilters.artists)) {
       final fuse = Fuzzy(
-        PlayerData.instance.artistList.map((e) => e.name).toList(),
+        library.artistList.map((e) => e.name).toList(),
         options: FuzzyOptions(
           tokenize: true,
           threshold: 0.4,
@@ -72,11 +76,12 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
         ),
       );
 
-      var result = await fuse.search(_text);
+      var result = await fuse.search(searchString);
+      if (!mounted || version != _searchVersion) return;
 
       for (var el in result) {
-        PlayerData.instance.artistList
-            .where((element) => identical(element.name, el.item))
+        library.artistList
+            .where((element) => element.name == el.item)
             .forEach(
               (element) => setState(() {
                 foundArtists.add(element);
@@ -87,7 +92,7 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
 
     if (activeFilters.contains(SearchFilters.songs)) {
       final fuse = Fuzzy(
-        PlayerData.instance.songList.map((e) => e.title).toList(),
+        library.songList.map((e) => e.title).toList(),
         options: FuzzyOptions(
           tokenize: true,
           threshold: 0.4,
@@ -95,11 +100,12 @@ class _SearchOverlayTabState extends State<SearchOverlayTab>
         ),
       );
 
-      var result = await fuse.search(_text);
+      var result = await fuse.search(searchString);
+      if (!mounted || version != _searchVersion) return;
 
       for (var el in result) {
-        PlayerData.instance.songList
-            .where((element) => identical(element.title, el.item))
+        library.songList
+            .where((element) => element.title == el.item)
             .forEach(
               (element) => setState(() {
                 foundSongs.add(element);

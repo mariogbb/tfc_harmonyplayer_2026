@@ -83,7 +83,7 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                 settingKey: "show_songs_time_label",
                 defaultValue: false,
                 onChange: (p0) {
-                  PlayerSettings.instance.setShowSongTimeLabel(p0);
+                  context.read<PlayerSettings>().setShowSongTimeLabel(p0);
                 },
               ),
             ],
@@ -140,7 +140,7 @@ class LookAndFeelScreenState extends State<LookAndFeelScreen> {
                 settingKey: "show_tab_label",
                 defaultValue: false,
                 onChange: (p0) {
-                  PlayerSettings.instance.showTabLabels(p0);
+                  context.read<PlayerSettings>().showTabLabels(p0);
                 },
               ),
             ],

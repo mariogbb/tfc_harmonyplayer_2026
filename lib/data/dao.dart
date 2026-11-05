@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:path/path.dart';
-import 'package:player/data/data.dart';
 import 'package:player/model/ranking.dart';
 import 'package:player/model/song.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -11,7 +10,6 @@ class PlayerDatabase {
 
   // Databases
   late Database database;
-  final PlayerData data = PlayerData();
 
   factory PlayerDatabase() {
     return _playerDatabase;
@@ -95,10 +93,12 @@ class PlayerDatabase {
     return Duration(seconds: result.first["PLAYEDTIME"] as int);
   }
 
-  Future<List<Ranking>> loadRankings() async {
+  Future<List<Ranking>> loadRankings([
+    List<SongData> librarySongs = const [],
+  ]) async {
     final rankingList = <Ranking>[];
     final songsById = {
-      for (final song in data.songList) song.id.toString(): song,
+      for (final song in librarySongs) song.id.toString(): song,
     };
     final rankingQuery = await database.query(
       "RANKINGS",

@@ -5,9 +5,9 @@ import 'package:player/theme_data/light_theme.dart';
 
 enum TopBarTheme { rounded, squared, seamless }
 
-AppBarTheme getSelectedAppBarTheme(TopBarTheme theme) {
+AppBarTheme getSelectedAppBarTheme(TopBarTheme theme, Color primaryColor) {
   return (SchedulerBinding.instance.platformDispatcher.platformBrightness ==
           Brightness.dark)
-      ? DarkTheme.getAppBarTheme(theme)
-      : LightTheme.getAppBarTheme(theme);
+      ? DarkTheme.getAppBarTheme(theme, primaryColor)
+      : LightTheme.getAppBarTheme(theme, primaryColor);
 }

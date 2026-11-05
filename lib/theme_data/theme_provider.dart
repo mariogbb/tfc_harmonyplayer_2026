@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
+
+import 'dart:developer' as developer;
+
 import 'package:player/theme_data/top_bar_theme.dart';
 import 'package:player/utils/extensions.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:player/data/services/settings/settings_store.dart';
 
 class ThemeProvider with ChangeNotifier {
-  ThemeMode selectedThemeMode = recoverThemeMode();
-  Color selectedPrimaryColor = recoverColor();
-  TopBarTheme selectedTopBarTheme = recoverTopBarTheme();
+  ThemeProvider(SettingsStore store)
+    : selectedThemeMode = recoverThemeMode(store),
+      selectedPrimaryColor = recoverColor(store),
+      selectedTopBarTheme = recoverTopBarTheme(store);
+
+  ThemeMode selectedThemeMode;
+  Color selectedPrimaryColor;
+  TopBarTheme selectedTopBarTheme;
 
   static TextStyle appBarText = const TextStyle(
     color: Colors.white70,
@@ -14,37 +22,48 @@ class ThemeProvider with ChangeNotifier {
     fontWeight: FontWeight.w700,
   );
 
-  static TopBarTheme recoverTopBarTheme() {
+  static TopBarTheme recoverTopBarTheme(SettingsStore store) {
     TopBarTheme out = TopBarTheme.seamless;
 
-    int? index = Settings.getValue<int>("topbar_theme",
-        defaultValue: TopBarTheme.values.indexOf(TopBarTheme.seamless));
+    int? index = store.read<int>(
+      "topbar_theme",
+      defaultValue: TopBarTheme.values.indexOf(TopBarTheme.seamless),
+    );
 
-    if (index != null) {
+    if (index != null && index >= 0 && index < TopBarTheme.values.length) {
       out = TopBarTheme.values[index];
     }
 
     return out;
   }
 
-  static Color recoverColor() {
+  static Color recoverColor(SettingsStore store) {
     Color c = Colors.deepPurple;
 
-    String? color = Settings.getValue<String>("accent_color");
+    String? color = store.read<String>("accent_color");
 
     if (color != null) {
-      c = color.toColor();
+      try {
+        c = color.toColor();
+      } on FormatException catch (error, stack) {
+        developer.log(
+          'Invalid saved accent color; using the default.',
+          name: 'settings',
+          error: error,
+          stackTrace: stack,
+        );
+      }
     }
 
     return c;
   }
 
-  static ThemeMode recoverThemeMode() {
+  static ThemeMode recoverThemeMode(SettingsStore store) {
     ThemeMode mode = ThemeMode.system;
 
-    int? index = Settings.getValue<int>("color_mode");
+    int? index = store.read<int>("color_mode");
 
-    if (index != null) {
+    if (index != null && index >= 0 && index < ThemeMode.values.length) {
       mode = ThemeMode.values[index];
     }
 
@@ -52,7 +71,7 @@ class ThemeProvider with ChangeNotifier {
   }
 
   AppBarTheme getAppBarTheme() {
-    return getSelectedAppBarTheme(recoverTopBarTheme());
+    return getSelectedAppBarTheme(selectedTopBarTheme, selectedPrimaryColor);
   }
 
   static MaterialColor getMaterialColorFromColor(Color color) {
@@ -76,8 +95,11 @@ class ThemeProvider with ChangeNotifier {
 
     final hsl = HSLColor.fromColor(color);
     final hslDark = hsl.withLightness(
-        (darker ? (hsl.lightness - value) : (hsl.lightness + value))
-            .clamp(0.0, 1.0));
+      (darker ? (hsl.lightness - value) : (hsl.lightness + value)).clamp(
+        0.0,
+        1.0,
+      ),
+    );
 
     return hslDark.toColor();
   }

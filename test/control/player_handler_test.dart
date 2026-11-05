@@ -132,6 +132,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(backend.files, ['/1.mp3', '/2.mp3']);
       expect(saved, [(1, const Duration(seconds: 1))]);
+      backend.positionEvents.add(const Duration(seconds: 1));
+      backend.positionEvents.add(const Duration(seconds: 2));
+      await handler.flushHistory();
+      expect(saved.last, (2, const Duration(seconds: 2)));
       await handler.pause();
       expect(handler.isPaused, isTrue);
       await handler.play();

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:player/data/settings.dart';
 import 'package:player/ui/home/user_name.dart';
 import 'package:player/ui/core/adaptive_layout.dart';
-import 'package:player/data/data.dart';
+import 'package:player/ui/library/library_controller.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/song.dart';
 import 'package:player/l10n/app_localizations.dart';
@@ -119,7 +119,7 @@ class PlayerMenuTab extends StatelessAdaptiveLayout {
   }
 
   Widget topSongsList(BuildContext context) {
-    return Consumer<PlayerData>(
+    return Consumer<LibraryController>(
       builder: (context, value, child) {
         if (value.songList.isEmpty) {
           return const Text("");
@@ -165,7 +165,7 @@ class PlayerMenuTab extends StatelessAdaptiveLayout {
   }
 
   Widget topAlbumsList(BuildContext context) {
-    return Consumer<PlayerData>(
+    return Consumer<LibraryController>(
       builder: (context, value, child) {
         if (value.albumList.isEmpty) {
           return const Text("");

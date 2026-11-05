@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/settings.dart';
@@ -97,9 +96,11 @@ class SongListItemState extends State<SongListItem> {
   Widget build(BuildContext context) {
     ArtworkShape shape = ArtworkShape.square;
 
-    int? index = Settings.getValue<int>("song_artwork_shape");
+    int? index = context.read<PlayerSettings>().store.read<int>(
+      "song_artwork_shape",
+    );
 
-    if (index != null) {
+    if (index != null && index >= 0 && index < ArtworkShape.values.length) {
       shape = ArtworkShape.values[index];
     }
 

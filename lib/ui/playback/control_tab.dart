@@ -4,7 +4,6 @@ import 'package:flutter/material.dart' hide CarouselController;
 import 'package:player/ui/core/adaptive_layout.dart';
 import 'package:player/data/data.dart';
 import 'package:player/model/play_context.dart';
-import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:player/control/media_control.dart';
@@ -39,18 +38,20 @@ class PlayerControlTabState extends State<PlayerControlTab>
       DraggableScrollableController();
 
   bool _isLiked(SongData? data) {
-    bool liked = false;
+    return context.read<PlaylistController>().playlists.any(
+      (playlist) => playlist.id == 1 && playlist.songs.contains(data),
+    );
+  }
 
-    try {
-      PlaylistData playlistData = context
-          .read<PlaylistController>()
-          .playlists
-          .firstWhere((element) => element.id == 1);
-
-      liked = playlistData.songs.contains(data);
-    } catch (_) {}
-
-    return liked;
+  Future<void> _toggleLike(PlaylistController playlists, SongData? song) async {
+    if (song == null) return;
+    final liked = playlists.playlists.where((playlist) => playlist.id == 1);
+    if (liked.isEmpty) return;
+    if (liked.first.songs.contains(song)) {
+      await playlists.removeSong(liked.first, song);
+    } else {
+      await playlists.addSong(liked.first, song);
+    }
   }
 
   String _getTopContextString(PlayingContext playingContext) {
@@ -337,22 +338,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
                     builder: (context, value, playlists, child) {
                       return IconButton(
                         onPressed: () async {
-                          PlaylistData playlistData = playlists.playlists
-                              .firstWhere((element) => element.id == 1);
-
-                          if (value.playingSong != null) {
-                            if (_isLiked(value.playingSong)) {
-                              await playlists.removeSong(
-                                playlistData,
-                                value.playingSong!,
-                              );
-                            } else {
-                              await playlists.addSong(
-                                playlistData,
-                                value.playingSong!,
-                              );
-                            }
-                          }
+                          await _toggleLike(playlists, value.playingSong);
                         },
                         icon: (_isLiked(value.playingSong))
                             ? Icon(
@@ -452,23 +438,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
               builder: (context, value, playlists, child) {
                 return IconButton(
                   onPressed: () async {
-                    PlaylistData playlistData = playlists.playlists.firstWhere(
-                      (element) => element.id == 1,
-                    );
-
-                    if (value.playingSong != null) {
-                      if (_isLiked(value.playingSong)) {
-                        await playlists.removeSong(
-                          playlistData,
-                          value.playingSong!,
-                        );
-                      } else {
-                        await playlists.addSong(
-                          playlistData,
-                          value.playingSong!,
-                        );
-                      }
-                    }
+                    await _toggleLike(playlists, value.playingSong);
                   },
                   icon: (_isLiked(value.playingSong))
                       ? Icon(
@@ -594,30 +564,28 @@ class PlayerControlTabState extends State<PlayerControlTab>
       bottom: true,
       child: NotificationListener<DraggableScrollableNotification>(
         onNotification: (value) {
-          try {
-            double switchValue = 0.4;
-            bool prevState = _opened;
+          double switchValue = 0.4;
+          bool prevState = _opened;
 
-            if (value.extent == value.minExtent) {
-              setState(() {
-                _opened = false;
-              });
-            }
+          if (value.extent == value.minExtent) {
+            setState(() {
+              _opened = false;
+            });
+          }
 
-            if (!_opened && value.extent >= switchValue) {
-              setState(() {
-                _opened = true;
-              });
-            } else if (_opened && value.extent < switchValue) {
-              setState(() {
-                _opened = false;
-              });
-            }
+          if (!_opened && value.extent >= switchValue) {
+            setState(() {
+              _opened = true;
+            });
+          } else if (_opened && value.extent < switchValue) {
+            setState(() {
+              _opened = false;
+            });
+          }
 
-            if (prevState != _opened) {
-              widget.onEvent!(_opened);
-            }
-          } catch (_) {}
+          if (prevState != _opened) {
+            widget.onEvent?.call(_opened);
+          }
 
           return false;
         },
@@ -674,30 +642,28 @@ class PlayerControlTabState extends State<PlayerControlTab>
   Widget buildNormal(BuildContext context) {
     return NotificationListener<DraggableScrollableNotification>(
       onNotification: (value) {
-        try {
-          double switchValue = 0.15;
-          bool prevValue = _opened;
+        double switchValue = 0.15;
+        bool prevValue = _opened;
 
-          if (value.extent == value.minExtent) {
-            setState(() {
-              _opened = false;
-            });
-          }
+        if (value.extent == value.minExtent) {
+          setState(() {
+            _opened = false;
+          });
+        }
 
-          if (!_opened && value.extent >= switchValue) {
-            setState(() {
-              _opened = true;
-            });
-          } else if (_opened && value.extent < switchValue) {
-            setState(() {
-              _opened = false;
-            });
-          }
+        if (!_opened && value.extent >= switchValue) {
+          setState(() {
+            _opened = true;
+          });
+        } else if (_opened && value.extent < switchValue) {
+          setState(() {
+            _opened = false;
+          });
+        }
 
-          if (prevValue != _opened) {
-            widget.onEvent!(_opened);
-          }
-        } catch (_) {}
+        if (prevValue != _opened) {
+          widget.onEvent?.call(_opened);
+        }
         return true;
       },
       child: AnimatedSwitcher(

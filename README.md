@@ -8,10 +8,26 @@ the media player calls.
 
 ```sh
 flutter pub get
-dart format --output=none --set-exit-if-changed lib/app lib/control lib/data/dao.dart lib/data/repositories lib/data/services lib/ui lib/main.dart test
+dart format --output=none --set-exit-if-changed lib/app lib/control lib/data/dao.dart lib/data/repositories lib/data/services lib/ui lib/main.dart test integration_test
 flutter analyze
 flutter test
 ```
+
+On Linux with a graphical session and working GStreamer plugins, run the native
+discovery, SQLite and playback smoke test with:
+
+```sh
+flutter test integration_test/desktop_smoke_test.dart -d linux
+```
+
+With an Android device or emulator connected, run the sandbox playback and
+playlist persistence smoke test with:
+
+```sh
+flutter test integration_test/android_smoke_test.dart -d <device-id>
+```
+
+Media-library permissions and background playback still need manual device checks.
 
 ## Linux development
 
@@ -51,6 +67,10 @@ and duration detection. SQLite's native DLL must be available to
 `sqflite_common_ffi`. Firebase, system media integration, and embedded artwork
 are not currently enabled on desktop. Windows builds and playback should be
 verified on a Windows machine.
+
+On Windows, the native discovery, SQLite and playback smoke test can be run with
+`flutter test integration_test/desktop_smoke_test.dart -d windows` after
+installing the Flutter Windows desktop prerequisites and an audio output device.
 
 ## Local Firebase setup
 

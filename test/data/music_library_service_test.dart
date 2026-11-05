@@ -93,12 +93,15 @@ void main() {
 
       addTearDown(data.dispose);
 
-      await data.loadSongs();
+      await data.libraryController.load(
+        smartFilterEnabled: true,
+        minimumDurationSeconds: 0,
+      );
 
       expect(library.scans, 1);
-      expect(data.songList, isEmpty);
-      expect(data.albumList, isEmpty);
-      expect(data.artistList, isEmpty);
+      expect(data.libraryController.songList, isEmpty);
+      expect(data.libraryController.albumList, isEmpty);
+      expect(data.libraryController.artistList, isEmpty);
     },
   );
 

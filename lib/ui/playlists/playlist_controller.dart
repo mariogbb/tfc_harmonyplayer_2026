@@ -13,6 +13,15 @@ class PlaylistController extends ChangeNotifier {
   bool _disposed = false;
   Object? error;
   bool isLoading = false;
+  int _loadGeneration = 0;
+
+  void invalidateLoads() {
+    _loadGeneration++;
+    if (isLoading) {
+      isLoading = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
 
   Future<T?> _perform<T>(Future<T> Function() operation) async {
     try {
@@ -33,10 +42,11 @@ class PlaylistController extends ChangeNotifier {
   }
 
   Future<void> load(List<SongData> songs) async {
+    final generation = ++_loadGeneration;
     isLoading = true;
     notifyListeners();
     final loaded = await _perform(() => repository.load(songs));
-    if (_disposed) return;
+    if (_disposed || generation != _loadGeneration) return;
     isLoading = false;
     if (loaded == null) {
       notifyListeners();
@@ -102,6 +112,7 @@ class PlaylistController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _loadGeneration++;
     super.dispose();
   }
 }
