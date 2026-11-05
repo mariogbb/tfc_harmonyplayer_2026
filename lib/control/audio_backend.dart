@@ -12,6 +12,7 @@ abstract class AudioBackend {
   Future<void> playFile(String path);
   Future<void> resume();
   Future<void> pause();
+  Future<void> stop();
   Future<void> seek(Duration position);
   Future<void> dispose();
 }
@@ -47,6 +48,8 @@ class AudioplayersBackend implements AudioBackend {
   Future<void> resume() => _player.resume();
   @override
   Future<void> pause() => _player.pause();
+  @override
+  Future<void> stop() => _player.stop();
   @override
   Future<void> seek(Duration position) => _player.seek(position);
   @override

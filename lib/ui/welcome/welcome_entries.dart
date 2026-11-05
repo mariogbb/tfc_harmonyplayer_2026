@@ -1,7 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:player/data/services/music_library/music_permissions.dart';
 import 'package:player/ui/welcome/welcome_entry.dart';
 
 List welcomeSlideWidgets = [
@@ -20,22 +18,7 @@ List welcomeSlideWidgets = [
     description: "Para poder escuchar música la aplicación necesita leer las canciones desde el almacenamiento",
     optionalWidget: TextButton(
       onPressed: () async {
-        if (Platform.isLinux || Platform.isWindows) return;
-        List<Permission> req = [];
-
-        var state = await Permission.storage.status;
-
-        if (state.isDenied) {
-          req.add(Permission.storage);
-        }
-
-        state = await Permission.manageExternalStorage.status;
-
-        if (state.isDenied) {
-          req.add(Permission.manageExternalStorage);
-        }
-
-        await req.request();
+        await MusicPermissions().request();
       },
       child: const Text("Permitir"),
     ),

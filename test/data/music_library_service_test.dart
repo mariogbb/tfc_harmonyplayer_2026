@@ -128,7 +128,7 @@ void main() {
         smartFilterEnabled: true,
         minimumDurationSeconds: 1,
       ).map((song) => song.id),
-      [3],
+      [3, 4],
     );
 
     expect(
@@ -137,7 +137,7 @@ void main() {
         smartFilterEnabled: false,
         minimumDurationSeconds: 1,
       ).map((song) => song.id),
-      [1, 3],
+      [1, 3, 4],
     );
   });
 

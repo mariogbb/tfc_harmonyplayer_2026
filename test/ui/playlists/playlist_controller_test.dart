@@ -56,6 +56,21 @@ SongData makeSong() {
 }
 
 void main() {
+  test('membership survives a refresh with new song instances', () async {
+    final repository = FakePlaylistRepository();
+    final controller = PlaylistController(repository);
+    addTearDown(controller.dispose);
+    final playing = makeSong();
+    final refreshed = makeSong();
+    await controller.load([refreshed]);
+    final playlist = controller.playlists.single;
+    await controller.addSong(playlist, playing);
+    expect(playlist.songs, [refreshed]);
+    expect(repository.events, isEmpty);
+    await controller.removeSong(playlist, playing);
+    expect(playlist.songs, isEmpty);
+    expect(repository.events, ['remove:1:5']);
+  });
   test('loads and updates playlist state through the repository', () async {
     final repository = FakePlaylistRepository();
     final controller = PlaylistController(repository);

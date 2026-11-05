@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:player/ui/core/adaptive_layout.dart';
 import 'package:player/data/data.dart';
@@ -9,6 +8,7 @@ import 'package:player/l10n/app_localizations.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/ui/core/generic_artwork.dart';
 import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:player/ui/playback/queue_carousel.dart';
 import 'package:provider/provider.dart';
 import 'package:player/utils/extensions.dart';
 
@@ -29,8 +29,6 @@ class PlayerControlTabState extends State<PlayerControlTab>
 
   bool _opened = false;
 
-  final CarouselSliderController carouselController =
-      CarouselSliderController();
   final DraggableScrollableController normalScrollController =
       DraggableScrollableController();
 
@@ -39,7 +37,8 @@ class PlayerControlTabState extends State<PlayerControlTab>
 
   bool _isLiked(SongData? data) {
     return context.read<PlaylistController>().playlists.any(
-      (playlist) => playlist.id == 1 && playlist.songs.contains(data),
+      (playlist) =>
+          playlist.id == 1 && playlist.songs.any((song) => song.id == data?.id),
     );
   }
 
@@ -47,7 +46,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
     if (song == null) return;
     final liked = playlists.playlists.where((playlist) => playlist.id == 1);
     if (liked.isEmpty) return;
-    if (liked.first.songs.contains(song)) {
+    if (liked.first.songs.any((item) => item.id == song.id)) {
       await playlists.removeSong(liked.first, song);
     } else {
       await playlists.addSong(liked.first, song);
@@ -77,7 +76,6 @@ class PlayerControlTabState extends State<PlayerControlTab>
     return IconButton(
       onPressed: () {
         widget.handler.next();
-        carouselController.nextPage();
       },
       icon: const Icon(Icons.skip_next),
     );
@@ -87,7 +85,6 @@ class PlayerControlTabState extends State<PlayerControlTab>
     return IconButton(
       onPressed: () {
         widget.handler.previous();
-        carouselController.previousPage();
       },
       icon: const Icon(Icons.skip_previous),
     );
@@ -112,42 +109,26 @@ class PlayerControlTabState extends State<PlayerControlTab>
   Widget _albumImageCarousel(BuildContext context, Axis orientation) {
     return Consumer<PlayerHandler>(
       builder: (context, value, child) {
-        return CarouselSlider.builder(
+        return QueueCarousel(
           itemCount: value.getCompleteQueue.length,
-          itemBuilder: (context, index, realIndex) {
+          index: value.getPlayingIndex,
+          itemBuilder: (context, index) {
             return _albumImage(
               context,
               orientation,
               value.getCompleteQueue[index],
             );
           },
-          carouselController: carouselController,
-          options: CarouselOptions(
-            viewportFraction: 1,
-            initialPage: value.getPlayingIndex,
-            enlargeCenterPage: true,
-            height: (orientation == Axis.vertical)
-                ? MediaQuery.of(context).size.height * 0.4
-                : MediaQuery.of(context).size.height * 0.8,
-            enlargeStrategy: CenterPageEnlargeStrategy.height,
-            enlargeFactor: 0.5,
-            onPageChanged: (index, reason) {
-              if (reason == CarouselPageChangedReason.manual) {
-                if (value.getPlayingIndex > index) {
-                  if (index != 0) {
-                    widget.handler.previous();
-                  }
-                } else {
-                  if (index != (value.getCompleteQueue.length - 1)) {
-                    widget.handler.next();
-                  }
-                }
-              }
-            },
-            disableCenter: false,
-            enableInfiniteScroll: false,
-            scrollPhysics: const BouncingScrollPhysics(),
-          ),
+          height: (orientation == Axis.vertical)
+              ? MediaQuery.of(context).size.height * 0.4
+              : MediaQuery.of(context).size.height * 0.8,
+          onManualPage: (index) {
+            if (value.getPlayingIndex > index) {
+              widget.handler.previous();
+            } else {
+              widget.handler.next();
+            }
+          },
         );
       },
     );

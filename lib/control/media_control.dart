@@ -46,10 +46,11 @@ class PlayerHandler extends BaseAudioHandler
 
   PlayerHandler.withBackend(this.backend, this.savePlayedTime) {
     _subscriptions.add(
-      backend.states.listen(
-        (state) => playbackState.add(_transformEvent(state)),
-        onError: _reportError,
-      ),
+      backend.states.listen((state) {
+        _paused = state != AudioBackendState.playing;
+        playbackState.add(_transformEvent(state));
+        notifyListeners();
+      }, onError: _reportError),
     );
     _subscriptions.add(
       backend.completed.listen(_songFinished, onError: _reportError),
@@ -107,14 +108,35 @@ class PlayerHandler extends BaseAudioHandler
       },
       androidCompactActionIndices: const [0, 1, 2],
       playing: state == AudioBackendState.playing,
+      processingState: state == AudioBackendState.completed
+          ? AudioProcessingState.completed
+          : state == AudioBackendState.stopped ||
+                state == AudioBackendState.disposed
+          ? AudioProcessingState.idle
+          : AudioProcessingState.ready,
     );
   }
 
   @override
   Future<void> playMediaItem(MediaItem mediaItem) async {}
 
-  void _songFinished(event) {
-    next();
+  void _songFinished(event) async {
+    final song = _queue.next();
+    if (song != null) {
+      _playNow(song);
+    } else {
+      _paused = true;
+      _position = _duration;
+      await flushHistory();
+      if (_disposed) return;
+      playbackState.add(
+        playbackState.value.copyWith(
+          playing: false,
+          processingState: AudioProcessingState.completed,
+        ),
+      );
+      notifyListeners();
+    }
   }
 
   void _durationChanged(Duration dur) {
@@ -275,6 +297,18 @@ class PlayerHandler extends BaseAudioHandler
   Future<void> pause() async {
     if (await _run(backend.pause)) _paused = true;
     notifyListeners();
+  }
+
+  @override
+  Future<void> stop() async {
+    final stopped = await _run(backend.stop);
+    if (stopped) {
+      _paused = true;
+      _position = Duration.zero;
+      await flushHistory();
+      notifyListeners();
+    }
+    await super.stop();
   }
 
   @override

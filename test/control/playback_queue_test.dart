@@ -24,12 +24,16 @@ void main() {
     queue.start(['a', 'b', 'c'], 0);
     queue.add('x');
     queue.addAll(['y', 'z']);
-    expect(queue.complete, ['x', 'y', 'z', 'a', 'b', 'c']);
+    expect(queue.complete, ['a', 'x', 'y', 'z', 'b', 'c']);
     expect(queue.next(), 'x');
+    expect(queue.complete[queue.index], 'x');
     expect(queue.next(), 'y');
     expect(queue.next(), 'z');
     expect(queue.next(), 'b');
     expect(queue.playNext, isEmpty);
+    expect(queue.previous(), 'z');
+    expect(queue.complete[queue.index], 'z');
+    expect(queue.next(), 'b');
   });
 
   test('shuffle retains current song and restores original order', () {
@@ -37,8 +41,8 @@ void main() {
     queue.start(['a', 'b', 'c', 'd'], 2);
     queue.setShuffle(true);
     expect(queue.shuffle, isTrue);
-    expect(queue.songs.first, 'c');
-    expect(queue.index, 0);
+    expect(queue.songs[queue.index], 'c');
+    expect(queue.index, 2);
     expect(queue.songs.toSet(), {'a', 'b', 'c', 'd'});
     queue.setShuffle(false);
     expect(queue.songs, ['a', 'b', 'c', 'd']);
@@ -62,9 +66,28 @@ void main() {
     queue.add('x');
     expect(queue.next(), 'x');
     queue.setShuffle(true);
-    expect(queue.songs.first, 'x');
+    expect(queue.songs[queue.index], 'x');
     queue.setShuffle(false);
-    expect(queue.index, greaterThanOrEqualTo(0));
+    expect(queue.previous(), 'a');
+    expect(queue.next(), 'x');
     expect(queue.next(), 'b');
   });
+
+  test(
+    'preserves multiple injected history entries across shuffle toggles',
+    () {
+      final queue = PlaybackQueue<String>(random: Random(5));
+      queue.start(['a', 'b', 'c'], 0);
+      queue.addAll(['x', 'y']);
+      expect(queue.next(), 'x');
+      expect(queue.next(), 'y');
+      queue.setShuffle(true);
+      queue.setShuffle(false);
+      expect(queue.complete, ['a', 'x', 'y', 'b', 'c']);
+      expect(queue.previous(), 'x');
+      expect(queue.previous(), 'a');
+      expect(queue.next(), 'x');
+      expect(queue.next(), 'y');
+    },
+  );
 }

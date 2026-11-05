@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:player/control/audio_backend.dart';
 import 'package:player/control/media_control.dart';
@@ -19,6 +20,7 @@ class FakeBackend implements AudioBackend {
   bool disposed = false;
   bool failResume = false;
   bool failPlay = false;
+  bool stopped = false;
   @override
   AudioBackendState get state => AudioBackendState.paused;
   @override
@@ -44,6 +46,11 @@ class FakeBackend implements AudioBackend {
 
   @override
   Future<void> pause() async {}
+  @override
+  Future<void> stop() async {
+    stopped = true;
+  }
+
   @override
   Future<void> seek(Duration position) async {}
   @override
@@ -82,6 +89,37 @@ SongData makeSong(int id) {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('completion flushes history and stop stops the backend', () async {
+    final backend = FakeBackend();
+    final saved = <(int, Duration)>[];
+    final handler = PlayerHandler.withBackend(
+      backend,
+      (id, duration) async => saved.add((id, duration)),
+    );
+    handler.playSongList(
+      PlayingContext('Test', ContextType.allSongs, [makeSong(1)]),
+      0,
+    );
+    await Future<void>.delayed(Duration.zero);
+    backend.stateEvents.add(AudioBackendState.playing);
+    expect(handler.isPaused, isFalse);
+    backend.positionEvents.add(const Duration(seconds: 1));
+    backend.completionEvents.add(null);
+    await Future<void>.delayed(Duration.zero);
+    expect(handler.isPaused, isTrue);
+    expect(
+      handler.playbackState.value.processingState,
+      AudioProcessingState.completed,
+    );
+    expect(saved, [(1, const Duration(seconds: 1))]);
+    await handler.stop();
+    expect(backend.stopped, isTrue);
+    expect(
+      handler.playbackState.value.processingState,
+      AudioProcessingState.idle,
+    );
+    handler.dispose();
+  });
   test('reports playback failures without claiming playback resumed', () async {
     final backend = FakeBackend()..failResume = true;
     final handler = PlayerHandler.withBackend(backend, (_, _) async {});

@@ -35,7 +35,7 @@ class SongList extends StatelessWidget {
     Duration out = Duration.zero;
 
     for (var element in playingContext.getSongs) {
-      out += Duration(milliseconds: element.model.duration!);
+      out += element.duration;
     }
 
     return out;

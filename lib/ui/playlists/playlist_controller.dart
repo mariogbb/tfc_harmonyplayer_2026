@@ -68,26 +68,28 @@ class PlaylistController extends ChangeNotifier {
   }
 
   Future<void> addSong(PlaylistData playlist, SongData song) async {
-    if (playlist.songs.contains(song)) return;
+    if (playlist.songs.any((item) => item.id == song.id)) return;
     final success = await _perform(() async {
       await repository.addSong(playlist.id, song.id);
       return true;
     });
     if (success != true) return;
     if (_disposed) return;
-    if (!playlist.songs.contains(song)) playlist.songs.add(song);
+    if (!playlist.songs.any((item) => item.id == song.id)) {
+      playlist.songs.add(song);
+    }
     notifyListeners();
   }
 
   Future<void> removeSong(PlaylistData playlist, SongData song) async {
-    if (!playlist.songs.contains(song)) return;
+    if (!playlist.songs.any((item) => item.id == song.id)) return;
     final success = await _perform(() async {
       await repository.removeSong(playlist.id, song.id);
       return true;
     });
     if (success != true) return;
     if (_disposed) return;
-    playlist.songs.remove(song);
+    playlist.songs.removeWhere((item) => item.id == song.id);
     notifyListeners();
   }
 

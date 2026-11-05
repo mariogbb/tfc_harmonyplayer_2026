@@ -45,27 +45,71 @@ class DefaultMusicLibraryRepository implements MusicLibraryRepository {
     required int minimumDurationSeconds,
   }) async {
     final snapshot = await service.scan();
-    final availableAlbums = {for (final album in snapshot.albums) album.id};
+    final albumsById = {for (final album in snapshot.albums) album.id: album};
+    final artistsById = {
+      for (final artist in snapshot.artists) artist.id: artist,
+    };
+    var unknownAlbumId = -2147483648;
+    while (albumsById.containsKey(unknownAlbumId)) {
+      unknownAlbumId++;
+    }
+    var unknownArtistId = -2147483648;
+    while (artistsById.containsKey(unknownArtistId)) {
+      unknownArtistId++;
+    }
+    final usedAlbums = <int, AlbumMetadata>{};
+    final usedArtists = <int, ArtistMetadata>{};
     final songs = <LibrarySong>[];
     for (final song in filterLibrarySongs(
       snapshot.songs,
       smartFilterEnabled: smartFilterEnabled,
       minimumDurationSeconds: minimumDurationSeconds,
     )) {
-      if (!availableAlbums.contains(song.albumId)) continue;
+      final sourceAlbum = albumsById[song.albumId];
+      final sourceArtist =
+          artistsById[song.artistId] ?? artistsById[sourceAlbum?.artistId];
+      final artist =
+          sourceArtist ??
+          ArtistMetadata(id: unknownArtistId, artist: 'Unknown artist');
+      final albumId = sourceAlbum?.id ?? unknownAlbumId;
+      final album = usedAlbums.putIfAbsent(
+        albumId,
+        () => AlbumMetadata(
+          id: albumId,
+          album: sourceAlbum?.album ?? 'Unknown album',
+          artist: sourceAlbum?.artist ?? artist.artist,
+          artistId: artistsById.containsKey(sourceAlbum?.artistId)
+              ? sourceAlbum!.artistId
+              : artist.id,
+        ),
+      );
+      usedArtists[artist.id] = artist;
+      final albumArtist = artistsById[album.artistId];
+      if (albumArtist != null) usedArtists[albumArtist.id] = albumArtist;
+      final normalized = SongMetadata(
+        id: song.id,
+        data: song.data,
+        title: song.title,
+        uri: song.uri,
+        artist: song.artist ?? artist.artist,
+        artistId: artist.id,
+        album: song.album ?? album.album,
+        albumId: album.id,
+        duration: song.duration,
+        track: song.track,
+      );
       songs.add(
-        LibrarySong(model: song, playedTime: await loadPlayedTime(song.id)),
+        LibrarySong(
+          model: normalized,
+          playedTime: await loadPlayedTime(song.id),
+        ),
       );
     }
 
-    final albumIds = songs.map((song) => song.model.albumId).toSet();
-    final albums = snapshot.albums
-        .where((album) => albumIds.contains(album.id))
-        .toList();
-    final artistIds = albums.map((album) => album.artistId).toSet();
-    final artists = snapshot.artists
-        .where((artist) => artistIds.contains(artist.id))
-        .toList();
-    return MusicLibrary(songs: songs, albums: albums, artists: artists);
+    return MusicLibrary(
+      songs: songs,
+      albums: usedAlbums.values.toList(),
+      artists: usedArtists.values.toList(),
+    );
   }
 }

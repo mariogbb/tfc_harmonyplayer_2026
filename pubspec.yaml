@@ -45,6 +45,7 @@ dependencies:
   sqflite_common_ffi: ^2.4.5
   # cast 2.1 uses the Bonsoir 5 discovery API; 6+ is incompatible.
   bonsoir: ^5.1.11
+  device_info_plus: ^12.4.0
 
 dev_dependencies:
   flutter_test:

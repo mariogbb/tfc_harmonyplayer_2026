@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:player/data/services/music_library/music_permissions.dart';
 import 'package:player/data/settings.dart';
 import 'package:player/ui/playback/google_cast_dialogs.dart';
 import 'package:player/ui/core/adaptive_layout.dart';
@@ -75,38 +75,12 @@ class _HomePageState extends State<HomePage>
 
   void requestPermissions() async {
     try {
-      if (Platform.isLinux || Platform.isWindows) {
-        widget.playerData.refreshCoordinator.refresh();
-        return;
-      }
-      List<Permission> req = [];
-
-      var state = await Permission.storage.status;
-
-      if (state.isDenied) {
-        req.add(Permission.storage);
-      }
-
-      state = await Permission.manageExternalStorage.status;
+      final granted = await MusicPermissions().request();
       if (!mounted) return;
-
-      if (state.isDenied) {
-        req.add(Permission.manageExternalStorage);
-      }
-
-      if (req.isNotEmpty) {
-        await req.request();
-
-        state = await Permission.storage.status;
-        if (!mounted) return;
-
-        if (state.isGranted) {
-          widget.playerData.refreshCoordinator.refresh();
-        } else {
-          widget.playerData.libraryController.permissionDenied();
-        }
-      } else {
+      if (granted) {
         widget.playerData.refreshCoordinator.refresh();
+      } else {
+        widget.playerData.libraryController.permissionDenied();
       }
     } catch (error, stack) {
       FlutterError.reportError(
