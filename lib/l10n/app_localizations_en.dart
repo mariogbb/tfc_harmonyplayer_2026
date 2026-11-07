@@ -362,6 +362,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rename_playlist => 'Rename playlist';
 
   @override
+  String get playlist_rename_error =>
+      'Couldn\'t rename the playlist. The name may already be in use.';
+
+  @override
   String get title => 'Title';
 
   @override

@@ -137,6 +137,7 @@
 	"new_name": "New name",
 	"delete_playlist": "Delete playlist",
 	"rename_playlist": "Rename playlist",
+	"playlist_rename_error": "Couldn't rename the playlist. The name may already be in use.",
 	"title": "Title",
 	"sort_by": "Sort by",
 	"search": "Search",

@@ -93,11 +93,12 @@ class PlaylistController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> rename(String name, PlaylistData playlist) async {
+  Future<bool> rename(String name, PlaylistData playlist) async {
     final renamed = await _perform(() => repository.rename(playlist.id, name));
-    if (_disposed || renamed != true) return;
+    if (_disposed || renamed != true) return false;
     playlist.name = name;
     notifyListeners();
+    return true;
   }
 
   Future<void> delete(PlaylistData playlist) async {

@@ -365,6 +365,10 @@ class AppLocalizationsGl extends AppLocalizations {
   String get rename_playlist => 'Cambiar nome';
 
   @override
+  String get playlist_rename_error =>
+      'Non se puido cambiar o nome da lista. Pode que xa estea en uso.';
+
+  @override
   String get title => 'Título';
 
   @override

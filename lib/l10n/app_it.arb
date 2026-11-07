@@ -137,6 +137,7 @@
 	"new_name": "Nuovo nome",
 	"delete_playlist": "Eliminare la playlist",
 	"rename_playlist": "Cambia nome",
+	"playlist_rename_error": "Impossibile rinominare la playlist. Il nome potrebbe essere già in uso.",
 	"title": "Titolo",
 	"sort_by": "Ordina per",
 	"search": "Ricerca",

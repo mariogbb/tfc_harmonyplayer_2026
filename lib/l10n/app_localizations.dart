@@ -798,6 +798,12 @@ abstract class AppLocalizations {
   /// **'Rename playlist'**
   String get rename_playlist;
 
+  /// No description provided for @playlist_rename_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t rename the playlist. The name may already be in use.'**
+  String get playlist_rename_error;
+
   /// No description provided for @title.
   ///
   /// In en, this message translates to:
