@@ -261,12 +261,6 @@ class AppLocalizationsGl extends AppLocalizations {
   String get playing_screen_artwork_shape_square => 'Cadrada';
 
   @override
-  String get backup_sett => 'Copia de seguridade';
-
-  @override
-  String get backup_sett_desc => 'Exportar ou importar as playlist e axustes';
-
-  @override
   String get behaviour_sett => 'Comportamento';
 
   @override

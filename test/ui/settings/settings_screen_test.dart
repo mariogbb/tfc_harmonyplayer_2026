@@ -18,6 +18,8 @@ void main() {
     );
 
     expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Backup'), findsNothing);
+    expect(find.byIcon(Icons.settings_backup_restore), findsNothing);
     await tester.ensureVisible(find.text('About'));
     await tester.tap(find.text('About'));
     await tester.pumpAndSettle();

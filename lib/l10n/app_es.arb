@@ -94,8 +94,6 @@
 	"playing_screen_artwork_shape_circle": "Circular",
 	"playing_screen_artwork_shape_square": "Cuadrada",
 
-	"backup_sett": "Copia de seguridad",
-	"backup_sett_desc": "Exportar o importar las playlist y ajustes",
 
 	"behaviour_sett": "Comportamiento",
 	"behaviour_sett_desc": "Como se comporta el reproductor",

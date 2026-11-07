@@ -259,12 +259,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playing_screen_artwork_shape_square => 'Square';
 
   @override
-  String get backup_sett => 'Backup';
-
-  @override
-  String get backup_sett_desc => 'Export or import playlist and settings';
-
-  @override
   String get behaviour_sett => 'Behaviour';
 
   @override

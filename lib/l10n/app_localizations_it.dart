@@ -261,13 +261,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get playing_screen_artwork_shape_square => 'Quadrato';
 
   @override
-  String get backup_sett => 'Back-up';
-
-  @override
-  String get backup_sett_desc =>
-      'Esportazione o importazione di playlist e impostazioni';
-
-  @override
   String get behaviour_sett => 'Comportamento';
 
   @override

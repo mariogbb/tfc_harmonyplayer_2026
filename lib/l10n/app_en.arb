@@ -94,8 +94,6 @@
 	"playing_screen_artwork_shape_circle": "Circle",
 	"playing_screen_artwork_shape_square": "Square",
 
-	"backup_sett": "Backup",
-	"backup_sett_desc": "Export or import playlist and settings",
 
 	"behaviour_sett": "Behaviour",
 	"behaviour_sett_desc": "Settings about how the player works",

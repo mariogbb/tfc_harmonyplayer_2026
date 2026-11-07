@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:player/ui/settings/about_screen/about_app_screen.dart';
 import 'package:player/ui/settings/app_settings/app_settings_screen.dart';
-import 'package:player/ui/settings/backup_settings/backup_screen.dart';
 import 'package:player/ui/settings/look_and_feel/look_and_feel.dart';
 import 'package:player/ui/settings/song_settings/song_settings.dart';
 
@@ -26,17 +25,6 @@ List<Widget> menuEntries(BuildContext context) {
       onClick: () {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => const SongSettingsScreen()),
-        );
-      },
-      context: context,
-    ),
-    menuEntry(
-      titleText: AppLocalizations.of(context)!.backup_sett,
-      subTitleText: AppLocalizations.of(context)!.backup_sett_desc,
-      leadingIcon: Icons.settings_backup_restore,
-      onClick: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const BackupSettingsScreen()),
         );
       },
       context: context,
