@@ -93,12 +93,15 @@ void main() {
 
       addTearDown(data.dispose);
 
-      await data.loadSongs();
+      await data.libraryController.load(
+        smartFilterEnabled: true,
+        minimumDurationSeconds: 0,
+      );
 
       expect(library.scans, 1);
-      expect(data.songList, isEmpty);
-      expect(data.albumList, isEmpty);
-      expect(data.artistList, isEmpty);
+      expect(data.libraryController.songList, isEmpty);
+      expect(data.libraryController.albumList, isEmpty);
+      expect(data.libraryController.artistList, isEmpty);
     },
   );
 
@@ -125,7 +128,7 @@ void main() {
         smartFilterEnabled: true,
         minimumDurationSeconds: 1,
       ).map((song) => song.id),
-      [3],
+      [3, 4],
     );
 
     expect(
@@ -134,7 +137,7 @@ void main() {
         smartFilterEnabled: false,
         minimumDurationSeconds: 1,
       ).map((song) => song.id),
-      [1, 3],
+      [1, 3, 4],
     );
   });
 

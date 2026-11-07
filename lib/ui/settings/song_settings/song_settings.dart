@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/settings.dart';
-import 'package:player/theme_data/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 class SongSettingsScreen extends StatefulWidget {
@@ -27,13 +26,14 @@ class SongSettingsScreenState extends State<SongSettingsScreen> {
             titleTextStyle: titleStyle,
             title: AppLocalizations.of(context)!.filters,
             children: [
-              Consumer<ThemeProvider>(
+              Consumer<PlayerSettings>(
                 builder: (context, value, child) {
                   return SwitchSettingsTile(
                     title: AppLocalizations.of(context)!.smart_filter_sett,
                     subtitle: AppLocalizations.of(context)!
                         .smart_filter_sett_desc,
                     settingKey: "smartFilterEnabled",
+                    onChange: value.setSmartFilterEnabled,
                   );
                 },
               ),

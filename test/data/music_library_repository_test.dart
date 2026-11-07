@@ -66,14 +66,17 @@ void main() {
         minimumDurationSeconds: 1,
       );
 
-      expect(library.songs.map((song) => song.model.id), [10, 11]);
+      expect(library.songs.map((song) => song.model.id), [10, 11, 14, 15, 16]);
       expect(library.songs.map((song) => song.playedTime), [
         const Duration(seconds: 10),
         const Duration(seconds: 11),
+        const Duration(seconds: 14),
+        const Duration(seconds: 15),
+        const Duration(seconds: 16),
       ]);
-      expect(library.albums.map((album) => album.id), [1]);
-      expect(library.artists.map((artist) => artist.id), [3]);
-      expect(historyRequests, [10, 11]);
+      expect(library.albums.map((album) => album.id), [1, -2147483648]);
+      expect(library.artists.map((artist) => artist.id), [3, -2147483648]);
+      expect(historyRequests, [10, 11, 14, 15, 16]);
     },
   );
 
@@ -96,7 +99,39 @@ void main() {
 
     expect(library.songs.single.model.id, 42);
     expect(library.albums.single.id, 5);
-    expect(library.artists, isEmpty);
+    expect(library.artists.single.artist, 'Unknown artist');
     expect(library.songs.single.playedTime, Duration.zero);
   });
+
+  test(
+    'synthetic metadata IDs do not collide with real negative IDs',
+    () async {
+      const reserved = -2147483648;
+      final repository = DefaultMusicLibraryRepository(
+        service: FakeService(
+          MusicLibrarySnapshot(
+            songs: [
+              song(1, reserved, 'Known', 1000),
+              song(2, null, 'Unknown', null),
+            ],
+            albums: [album(reserved, reserved)],
+            artists: [artist(reserved)],
+          ),
+        ),
+        loadPlayedTime: (_) async => Duration.zero,
+      );
+      final library = await repository.load(
+        smartFilterEnabled: false,
+        minimumDurationSeconds: 0,
+      );
+      expect(library.songs.map((s) => s.model.id), [1, 2]);
+      expect(library.albums.map((a) => a.id).toSet(), {reserved, reserved + 1});
+      expect(library.artists.map((a) => a.id).toSet(), {
+        reserved,
+        reserved + 1,
+      });
+      expect(library.songs.last.model.albumId, reserved + 1);
+      expect(library.songs.last.model.artistId, reserved + 1);
+    },
+  );
 }

@@ -54,6 +54,16 @@ class AlbumData {
   }
 
   ArtistData _getArtist() {
-    return _artists.firstWhere((element) => element.id == model.artistId!);
+    return _artists.firstWhere(
+      (element) => element.id == model.artistId,
+      orElse: () => ArtistData(
+        ArtistMetadata(
+          id: model.artistId ?? -1,
+          artist: model.artist ?? 'Unknown artist',
+        ),
+        albums: [this],
+        songs: _songs,
+      ),
+    );
   }
 }

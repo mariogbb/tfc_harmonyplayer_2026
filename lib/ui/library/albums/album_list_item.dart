@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:player/data/settings.dart';
+import 'package:provider/provider.dart';
 import 'package:player/data/data.dart';
 import 'package:player/ui/library/songs/song_dialogs.dart';
 import 'package:player/model/album.dart';
@@ -58,9 +59,11 @@ class AlbumListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     ArtworkShape shape = ArtworkShape.square;
 
-    int? index = Settings.getValue<int>("albumtab_artwork_shape");
+    int? index = context.read<PlayerSettings>().store.read<int>(
+      "albumtab_artwork_shape",
+    );
 
-    if (index != null) {
+    if (index != null && index >= 0 && index < ArtworkShape.values.length) {
       shape = ArtworkShape.values[index];
     }
 

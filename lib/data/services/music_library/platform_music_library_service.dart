@@ -1,14 +1,18 @@
 import 'package:firebase_performance/firebase_performance.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:player/data/services/music_library/music_permissions.dart';
 import 'package:player/data/services/music_library/audio_query_mapper.dart';
 import 'package:player/data/services/music_library/music_library_service.dart';
 
 /// Media-library discovery for the existing non-desktop platform path.
 class PlatformMusicLibraryService implements MusicLibraryService {
+  PlatformMusicLibraryService({MusicPermissions? permissions})
+    : _permissions = permissions ?? MusicPermissions();
+
+  final MusicPermissions _permissions;
   @override
   Future<MusicLibrarySnapshot> scan() async {
-    if (await Permission.storage.isDenied) {
+    if (!await _permissions.isGranted()) {
       throw const MusicPermissionDenied();
     }
 

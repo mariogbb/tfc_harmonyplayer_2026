@@ -124,13 +124,14 @@ void main() {
     final stored = SqlitePlaylistRepository(disk);
     final playlist = (await stored.create('Saved'))!;
     await stored.addSong(playlist.id, 42);
+    expect(await stored.rename(playlist.id, 'Renamed'), isTrue);
     await disk.close();
 
     disk = await databaseFactoryFfi.openDatabase(path);
     addTearDown(disk.close);
     final reloaded = await SqlitePlaylistRepository(disk).load([song(42)]);
     expect(reloaded.single.id, playlist.id);
-    expect(reloaded.single.name, 'Saved');
+    expect(reloaded.single.name, 'Renamed');
     expect(reloaded.single.songs.single.id, 42);
   });
 }

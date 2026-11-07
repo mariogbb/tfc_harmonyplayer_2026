@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:player/ui/playback/control_tab.dart';
-import 'package:player/data/data.dart';
+import 'package:player/ui/library/library_controller.dart';
+import 'package:provider/provider.dart';
 import 'package:player/model/play_context.dart';
 import 'package:player/model/song.dart';
 import 'package:player/model/sort.dart';
@@ -20,7 +21,7 @@ class TopSongsRankingState extends State<TopSongsRanking> {
   List<SongData> _getSongRanking(BuildContext context) {
     RankingData rankingType =
         ModalRoute.of(context)!.settings.arguments as RankingData;
-    PlayerData data = PlayerData.instance;
+    final data = context.watch<LibraryController>();
 
     List<SongData> out = [];
 

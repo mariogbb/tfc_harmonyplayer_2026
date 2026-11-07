@@ -14,19 +14,17 @@ class LibraryController extends ChangeNotifier {
     required this.repository,
     required this.artworkRepository,
     required this.localArtwork,
-    List<SongData>? songs,
-    List<AlbumData>? albums,
-    List<ArtistData>? artists,
-  }) : songList = songs ?? [],
-       albumList = albums ?? [],
-       artistList = artists ?? [];
+  });
 
   final MusicLibraryRepository repository;
   final ArtworkRepository artworkRepository;
   final LocalArtworkService localArtwork;
-  final List<SongData> songList;
-  final List<AlbumData> albumList;
-  final List<ArtistData> artistList;
+  List<SongData> _songs = [];
+  List<AlbumData> _albums = [];
+  List<ArtistData> _artists = [];
+  List<SongData> get songList => List.unmodifiable(_songs);
+  List<AlbumData> get albumList => List.unmodifiable(_albums);
+  List<ArtistData> get artistList => List.unmodifiable(_artists);
   bool isLoading = false;
   Object? error;
   bool isPermissionDenied = false;
@@ -66,36 +64,43 @@ class LibraryController extends ChangeNotifier {
         library.albums.map((album) => localArtwork.loadAlbumArtwork(album.id)),
       );
       if (_disposed || generation != _generation) return false;
-      songList.clear();
-      albumList.clear();
-      artistList.clear();
+      final songs = <SongData>[];
+      final albums = <AlbumData>[];
+      final artists = <ArtistData>[];
       for (var i = 0; i < library.albums.length; i++) {
         final album = AlbumData(
           library.albums[i],
           artwork: artwork[i],
-          songs: songList,
-          artists: artistList,
+          songs: songs,
+          artists: artists,
         );
-        albumList.add(album);
-        unawaited(_loadAlbumUrl(album, generation));
+        albums.add(album);
       }
-      final albumsById = {for (final album in albumList) album.id: album};
+      final albumsById = {for (final album in albums) album.id: album};
       for (final song in library.songs) {
         final album = albumsById[song.model.albumId];
         if (album != null) {
-          songList.add(
+          songs.add(
             SongData(
               model: song.model,
               albumModel: album,
               playedTime: song.playedTime,
-              artists: artistList,
+              artists: artists,
             ),
           );
         }
       }
       for (final model in library.artists) {
-        final artist = ArtistData(model, albums: albumList, songs: songList);
-        artistList.add(artist);
+        final artist = ArtistData(model, albums: albums, songs: songs);
+        artists.add(artist);
+      }
+      _songs = songs;
+      _albums = albums;
+      _artists = artists;
+      for (final album in albums) {
+        unawaited(_loadAlbumUrl(album, generation));
+      }
+      for (final artist in artists) {
         unawaited(_loadArtistUrl(artist, generation));
       }
       isLoading = false;

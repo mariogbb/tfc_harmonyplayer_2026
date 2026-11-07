@@ -40,14 +40,16 @@ dependencies:
   url_launcher: ^6.1.10
   firebase_remote_config: ^6.0.0
   firebase_analytics: ^12.0.0
-  filesystem_picker: ^4.1.0
   fuzzysearch: ^0.1.3
   sqflite_common_ffi: ^2.4.5
   # cast 2.1 uses the Bonsoir 5 discovery API; 6+ is incompatible.
   bonsoir: ^5.1.11
+  device_info_plus: ^12.4.0
 
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
   flutter_lints: ^2.0.0
 

@@ -36,12 +36,10 @@ class AppGeneralSettingsScreenState extends State<AppGeneralSettingsScreen> {
                     title: AppLocalizations.of(context)!.language_sett,
                     settingKey: "language",
                     selected: (value.getAppLocale != null)
-                        ? value.getAppLocale!.countryCode ?? "en"
+                        ? value.getAppLocale!.languageCode
                         : "en",
                     onChange: (p0) {
-                      PlayerSettings.instance.setLocale(
-                        Locale.fromSubtags(languageCode: p0),
-                      );
+                      value.setLocale(Locale.fromSubtags(languageCode: p0));
                     },
                     values: {
                       for (var element in locales)

@@ -91,8 +91,10 @@ class PlaylistDialogs {
   }
 
   static void renamePlaylist(BuildContext context, PlaylistData playlist) {
-    String text = "";
-    bool error = false;
+    String text = playlist.name;
+    String? error;
+    bool saving = false;
+    final controller = context.read<PlaylistController>();
 
     showDialog(
       context: context,
@@ -101,6 +103,32 @@ class PlaylistDialogs {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
+            Future<void> submit() async {
+              if (saving) return;
+              final name = text.trim();
+              if (name.isEmpty) {
+                setState(
+                  () =>
+                      error = AppLocalizations.of(context)!.field_cannot_empty,
+                );
+                return;
+              }
+              setState(() {
+                saving = true;
+                error = null;
+              });
+              final success = await controller.rename(name, playlist);
+              if (!context.mounted) return;
+              if (success) {
+                Navigator.pop(context);
+              } else {
+                setState(() {
+                  saving = false;
+                  error = AppLocalizations.of(context)!.playlist_rename_error;
+                });
+              }
+            }
+
             return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
@@ -119,31 +147,21 @@ class PlaylistDialogs {
                     ),
                   ),
                   ListTile(
-                    title: TextField(
+                    title: TextFormField(
+                      initialValue: playlist.name,
+                      enabled: !saving,
                       autofocus: true,
                       textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.go,
                       maxLength: 50,
-                      onSubmitted: (value) {
-                        if (text.isEmpty) {
-                          setState(() => error = true);
-                        } else {
-                          context.read<PlaylistController>().rename(
-                            text,
-                            playlist,
-                          );
-                          Navigator.pop(context);
-                        }
-                      },
+                      onFieldSubmitted: (_) => submit(),
                       decoration: InputDecoration(
                         label: Text(AppLocalizations.of(context)!.name),
-                        errorText: (error)
-                            ? AppLocalizations.of(context)!.field_cannot_empty
-                            : null,
+                        errorText: error,
                       ),
                       onChanged: (value) {
                         setState(() => text = value);
-                        setState(() => error = false);
+                        setState(() => error = null);
                       },
                     ),
                   ),
@@ -157,18 +175,10 @@ class PlaylistDialogs {
                           ),
                         ),
                       ),
-                      onPressed: () {
-                        if (text.isEmpty) {
-                          setState(() => error = true);
-                        } else {
-                          context.read<PlaylistController>().rename(
-                            text,
-                            playlist,
-                          );
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Text(AppLocalizations.of(context)!.create),
+                      onPressed: saving ? null : submit,
+                      child: Text(
+                        AppLocalizations.of(context)!.rename_playlist,
+                      ),
                     ),
                   ),
                 ],

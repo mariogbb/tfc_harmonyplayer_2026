@@ -1,14 +1,53 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
+import 'package:player/data/services/settings/settings_store.dart';
+
+import 'dart:async';
 
 class PlayerSettings extends ChangeNotifier {
-  static final PlayerSettings _playerData = PlayerSettings.internal();
+  final SettingsStore store;
+  Object? lastError;
+  bool _disposed = false;
+  final Set<Future<void>> _pendingWrites = {};
 
-  factory PlayerSettings() {
-    return _playerData;
+  void _persist<T>(String key, T value) {
+    late final Future<void> pending;
+    pending = _write(
+      key,
+      value,
+    ).whenComplete(() => _pendingWrites.remove(pending));
+    _pendingWrites.add(pending);
+    unawaited(pending);
   }
 
-  static PlayerSettings get instance => _playerData;
+  Future<void> flush() async {
+    await Future.wait(_pendingWrites.toList());
+  }
+
+  Future<void> _write<T>(String key, T value) async {
+    try {
+      await store.write<T>(key, value);
+      if (!_disposed && lastError != null) {
+        lastError = null;
+        notifyListeners();
+      }
+    } catch (error, stack) {
+      lastError = error;
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'settings',
+        ),
+      );
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   // User name
 
@@ -18,7 +57,7 @@ class PlayerSettings extends ChangeNotifier {
 
   void setUserName(String userName) {
     _userName = userName;
-    Settings.setValue("user_name", userName);
+    _persist("user_name", userName);
     notifyListeners();
   }
 
@@ -30,6 +69,7 @@ class PlayerSettings extends ChangeNotifier {
 
   void setLocale(Locale locale) {
     _locale = locale;
+    _persist('language', locale.languageCode);
 
     notifyListeners();
   }
@@ -43,7 +83,7 @@ class PlayerSettings extends ChangeNotifier {
   void setFilterDuration(double newDuration) {
     _filterDuration = newDuration;
 
-    Settings.setValue<double>("filterDuration", newDuration);
+    _persist<double>("filterDuration", newDuration);
 
     notifyListeners();
   }
@@ -57,7 +97,7 @@ class PlayerSettings extends ChangeNotifier {
   void setSmartFilterEnabled(bool enabled) {
     _smartFilterEnabled = enabled;
 
-    Settings.setValue<bool>("smartFilterEnabled", enabled);
+    _persist<bool>("smartFilterEnabled", enabled);
 
     notifyListeners();
   }
@@ -71,7 +111,7 @@ class PlayerSettings extends ChangeNotifier {
   void showTabLabels(bool show) {
     _showTabLabels = show;
 
-    Settings.setValue<bool>("show_tab_label", show);
+    _persist<bool>("show_tab_label", show);
 
     notifyListeners();
   }
@@ -85,30 +125,29 @@ class PlayerSettings extends ChangeNotifier {
   void setShowSongTimeLabel(bool show) {
     _showSongTimeLabel = show;
 
-    Settings.setValue<bool>("show_songs_time_label", show);
+    _persist<bool>("show_songs_time_label", show);
     notifyListeners();
   }
 
-  PlayerSettings.internal() {
-    _filterDuration = Settings.getValue<double>(
-      "filterDuration",
-      defaultValue: 0,
-    )!;
-    _smartFilterEnabled = Settings.getValue<bool>(
+  PlayerSettings(this.store) {
+    _filterDuration = store.read<double>("filterDuration", defaultValue: 0)!;
+    _smartFilterEnabled = store.read<bool>(
       "smartFilterEnabled",
       defaultValue: true,
     )!;
-    _userName = Settings.getValue<String>("user_name");
-    _showTabLabels = true;
-    _showSongTimeLabel = Settings.getValue<bool>(
+    _userName = store.read<String>("user_name");
+    final language = store.read<String>('language');
+    if (language != null && language.isNotEmpty) _locale = Locale(language);
+    _showTabLabels = store.read<bool>('show_tab_label', defaultValue: true)!;
+    _showSongTimeLabel = store.read<bool>(
       "show_songs_time_label",
       defaultValue: false,
     )!;
   }
 
   void setDefaultValues() {
-    Settings.setValue<double>("filterDuration", 0);
-    Settings.setValue<bool>("smartFilterEnabled", true);
+    _persist<double>("filterDuration", 0);
+    _persist<bool>("smartFilterEnabled", true);
     _showTabLabels = true;
   }
 }

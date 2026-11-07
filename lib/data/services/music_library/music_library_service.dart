@@ -29,6 +29,6 @@ List<SongMetadata> filterLibrarySongs(
   return songs.where((song) {
     if (smartFilterEnabled && song.title.startsWith('AUD')) return false;
     final duration = song.duration;
-    return duration != null && duration >= minimumDurationSeconds * 1000;
+    return duration == null || duration >= minimumDurationSeconds * 1000;
   }).toList();
 }

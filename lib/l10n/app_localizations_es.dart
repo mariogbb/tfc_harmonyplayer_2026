@@ -261,12 +261,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get playing_screen_artwork_shape_square => 'Cuadrada';
 
   @override
-  String get backup_sett => 'Copia de seguridad';
-
-  @override
-  String get backup_sett_desc => 'Exportar o importar las playlist y ajustes';
-
-  @override
   String get behaviour_sett => 'Comportamiento';
 
   @override
@@ -369,6 +363,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get rename_playlist => 'Cambiar nombre';
+
+  @override
+  String get playlist_rename_error =>
+      'No se pudo cambiar el nombre de la lista. Puede que ya esté en uso.';
 
   @override
   String get title => 'Título';

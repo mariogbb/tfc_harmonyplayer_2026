@@ -261,13 +261,6 @@ class AppLocalizationsIt extends AppLocalizations {
   String get playing_screen_artwork_shape_square => 'Quadrato';
 
   @override
-  String get backup_sett => 'Back-up';
-
-  @override
-  String get backup_sett_desc =>
-      'Esportazione o importazione di playlist e impostazioni';
-
-  @override
   String get behaviour_sett => 'Comportamento';
 
   @override
@@ -371,6 +364,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rename_playlist => 'Cambia nome';
+
+  @override
+  String get playlist_rename_error =>
+      'Impossibile rinominare la playlist. Il nome potrebbe essere già in uso.';
 
   @override
   String get title => 'Titolo';

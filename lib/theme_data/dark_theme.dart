@@ -5,7 +5,7 @@ import 'package:player/theme_data/top_bar_theme.dart';
 class DarkTheme {
   static const Color _backgroundColor = Color.fromRGBO(18, 18, 18, 1);
 
-  static ThemeData getTheme(Color primaryColor) {
+  static ThemeData getTheme(Color primaryColor, TopBarTheme topBarTheme) {
     return ThemeData(
       primarySwatch: ThemeProvider.getMaterialColorFromColor(primaryColor),
       primaryColor: primaryColor,
@@ -18,19 +18,18 @@ class DarkTheme {
         labelColor: primaryColor,
       ),
       popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      appBarTheme: getAppBarTheme(ThemeProvider.recoverTopBarTheme()),
+      appBarTheme: getAppBarTheme(topBarTheme, primaryColor),
     );
   }
 
-  static AppBarTheme getAppBarTheme(TopBarTheme theme) {
+  static AppBarTheme getAppBarTheme(TopBarTheme theme, Color primaryColor) {
     TextStyle appBarText = TextStyle(
-        color: ThemeProvider.recoverColor(),
-        fontSize: 20,
-        fontWeight: FontWeight.w700);
+      color: primaryColor,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+    );
 
     switch (theme) {
       case TopBarTheme.rounded:
@@ -39,17 +38,17 @@ class DarkTheme {
           centerTitle: true,
           backgroundColor: _backgroundColor,
           titleTextStyle: appBarText,
-          iconTheme: IconThemeData(color: ThemeProvider.recoverColor()),
+          iconTheme: IconThemeData(color: primaryColor),
           shape: RoundedRectangleBorder(
-            side: BorderSide(color: ThemeProvider.recoverColor(), width: 2),
+            side: BorderSide(color: primaryColor, width: 2),
             borderRadius: BorderRadius.circular(15),
           ),
         );
       case TopBarTheme.squared:
         return AppBarTheme(
           centerTitle: true,
-          backgroundColor: ThemeProvider.recoverColor().withAlpha(50),
-          iconTheme: IconThemeData(color: ThemeProvider.recoverColor()),
+          backgroundColor: primaryColor.withAlpha(50),
+          iconTheme: IconThemeData(color: primaryColor),
         );
       case TopBarTheme.seamless:
         return AppBarTheme(

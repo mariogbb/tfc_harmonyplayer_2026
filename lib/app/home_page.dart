@@ -2,13 +2,12 @@ import 'dart:io';
 
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:player/data/services/music_library/music_permissions.dart';
 import 'package:player/data/settings.dart';
 import 'package:player/ui/playback/google_cast_dialogs.dart';
 import 'package:player/ui/core/adaptive_layout.dart';
 import 'package:player/ui/playback/control_tab.dart';
 import 'package:player/data/data.dart';
-import 'package:player/data/dao.dart';
 import 'package:player/ui/welcome/welcome_screen.dart';
 import 'package:player/ui/library/albums/albums_tab.dart';
 import 'package:player/ui/library/artists/artists_tab.dart';
@@ -24,7 +23,6 @@ class HomePage extends StatefulWidget {
   HomePage({Key? key, required this.showWelcome}) : super(key: key);
   final bool showWelcome;
   final PlayerData playerData = PlayerData.instance;
-  final PlayerDatabase database = PlayerDatabase.instance;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -77,38 +75,12 @@ class _HomePageState extends State<HomePage>
 
   void requestPermissions() async {
     try {
-      if (Platform.isLinux || Platform.isWindows) {
-        widget.playerData.initState();
-        return;
-      }
-      List<Permission> req = [];
-
-      var state = await Permission.storage.status;
-
-      if (state.isDenied) {
-        req.add(Permission.storage);
-      }
-
-      state = await Permission.manageExternalStorage.status;
+      final granted = await MusicPermissions().request();
       if (!mounted) return;
-
-      if (state.isDenied) {
-        req.add(Permission.manageExternalStorage);
-      }
-
-      if (req.isNotEmpty) {
-        await req.request();
-
-        state = await Permission.storage.status;
-        if (!mounted) return;
-
-        if (state.isGranted) {
-          widget.playerData.initState();
-        } else {
-          widget.playerData.libraryController.permissionDenied();
-        }
+      if (granted) {
+        widget.playerData.refreshCoordinator.refresh();
       } else {
-        widget.playerData.initState();
+        widget.playerData.libraryController.permissionDenied();
       }
     } catch (error, stack) {
       FlutterError.reportError(
@@ -125,10 +97,6 @@ class _HomePageState extends State<HomePage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    widget.playerData.handler.stop();
-    widget.database.database.close();
-    PlayerData.instance.handler.dispose();
-    PlayerData.instance.dispose();
     _tabController.dispose();
     _animationController.dispose();
     super.dispose();
@@ -325,7 +293,7 @@ class _HomePageState extends State<HomePage>
           itemBuilder: (context) {
             return [
               PopupMenuItem(
-                onTap: () => PlayerData.instance.initState(),
+                onTap: () => PlayerData.instance.refreshCoordinator.refresh(),
                 value: 0,
                 child: ListTile(
                   leading: Icon(

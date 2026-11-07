@@ -3,7 +3,7 @@ import 'package:player/theme_data/theme_provider.dart';
 import 'package:player/theme_data/top_bar_theme.dart';
 
 class LightTheme {
-  static ThemeData getTheme(Color primaryColor) {
+  static ThemeData getTheme(Color primaryColor, TopBarTheme topBarTheme) {
     return ThemeData(
       primarySwatch: ThemeProvider.getMaterialColorFromColor(primaryColor),
       primaryColor: primaryColor,
@@ -14,19 +14,18 @@ class LightTheme {
         labelColor: primaryColor,
       ),
       popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      appBarTheme: getAppBarTheme(
-        ThemeProvider.recoverTopBarTheme(),
-      ),
+      appBarTheme: getAppBarTheme(topBarTheme, primaryColor),
     );
   }
 
-  static AppBarTheme getAppBarTheme(TopBarTheme theme) {
+  static AppBarTheme getAppBarTheme(TopBarTheme theme, Color primaryColor) {
     TextStyle appBarText = const TextStyle(
-        color: Colors.black, fontSize: 20, fontWeight: FontWeight.w700);
+      color: Colors.black,
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+    );
 
     switch (theme) {
       case TopBarTheme.rounded:
@@ -35,9 +34,9 @@ class LightTheme {
           centerTitle: true,
           backgroundColor: Colors.white,
           titleTextStyle: appBarText,
-          iconTheme: IconThemeData(color: ThemeProvider.recoverColor()),
+          iconTheme: IconThemeData(color: primaryColor),
           shape: RoundedRectangleBorder(
-            side: BorderSide(color: ThemeProvider.recoverColor(), width: 2),
+            side: BorderSide(color: primaryColor, width: 2),
             borderRadius: BorderRadius.circular(25),
           ),
         );

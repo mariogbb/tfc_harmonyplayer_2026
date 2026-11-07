@@ -18,9 +18,9 @@ class PlaybackQueue<T> {
   bool get shuffle => _shuffle;
 
   List<T> get complete => [
-    ..._songs.take(_index),
+    ..._songs.take(_songs.isEmpty ? 0 : _index + 1),
     ..._playNext,
-    ..._songs.skip(_index),
+    ..._songs.skip(_songs.isEmpty ? 0 : _index + 1),
   ];
 
   void add(T song) => _playNext.add(song);
@@ -39,29 +39,38 @@ class PlaybackQueue<T> {
   }
 
   void setShuffle(bool enabled) {
+    if (_shuffle == enabled) return;
     _shuffle = enabled;
     if (_songs.isEmpty || _current == null) return;
     if (enabled) {
       _shuffleSongs();
     } else {
-      _songs = List.of(_original);
-      final currentIndex = _songs.indexOf(_current as T);
-      if (currentIndex >= 0) _index = currentIndex;
+      final history = _songs.take(_index + 1).toList();
+      final remaining = _songs.skip(_index + 1).toList();
+      final ordered = <T>[];
+      for (final song in _original) {
+        final index = remaining.indexOf(song);
+        if (index >= 0) ordered.add(remaining.removeAt(index));
+      }
+      _songs = [...history, ...ordered, ...remaining];
     }
   }
 
   void _shuffleSongs() {
-    final current = _current as T;
-    final currentIndex = _songs.indexOf(current);
-    if (currentIndex >= 0) _songs.removeAt(currentIndex);
-    _songs.shuffle(_random);
-    _songs = [current, ..._songs];
-    _index = 0;
+    final history = _songs.take(_index + 1).toList();
+    final remaining = _songs.skip(_index + 1).toList()..shuffle(_random);
+    _songs = [...history, ...remaining];
   }
 
   T? next() {
     if (_playNext.isNotEmpty) {
       _current = _playNext.removeAt(0);
+      if (_songs.isEmpty) {
+        _songs.add(_current as T);
+        _index = 0;
+      } else {
+        _songs.insert(++_index, _current as T);
+      }
       return _current;
     }
     if (_index + 1 >= _songs.length) return null;
@@ -79,12 +88,12 @@ class PlaybackQueue<T> {
   List<T> nearby() {
     final current = _current;
     if (current == null) return [];
-    final index = _songs.indexOf(current);
+    final index = _index;
     final result = <T>[];
     if (index > 0) {
       result.add(_songs[index - 1]);
-      result.add(current);
     }
+    result.add(current);
     if (_playNext.isNotEmpty) {
       result.add(_playNext.first);
     } else if (index >= 0 && index + 1 < _songs.length) {

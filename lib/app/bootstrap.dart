@@ -12,6 +12,7 @@ import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
 import 'package:player/data/repositories/artwork_repository.dart';
 import 'package:player/data/repositories/music_library_repository.dart';
+import 'package:player/data/repositories/listening_history_repository.dart';
 import 'package:player/data/repositories/playlist_repository.dart';
 import 'package:player/data/services/artwork/database_artwork_cache.dart';
 import 'package:player/data/services/artwork/deezer_artwork_service.dart';
@@ -19,6 +20,9 @@ import 'package:player/data/services/artwork/local_artwork_service.dart';
 import 'package:player/data/services/music_library/desktop_music_library_service.dart';
 import 'package:player/data/services/music_library/platform_music_library_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:player/app/app_resources.dart';
+import 'package:player/data/settings.dart';
+import 'package:player/data/services/settings/settings_store.dart';
 
 /// Initializes platform services and returns whether to show the welcome screen.
 Future<bool> bootstrap() async {
@@ -29,10 +33,15 @@ Future<bool> bootstrap() async {
   final prefs = await SharedPreferences.getInstance();
   await Settings.init();
   Settings.ensureCacheProvider();
+  final settingsStore = FlutterSettingsStore();
+  final settings = PlayerSettings(settingsStore);
 
   final showWelcome = await initializeWelcomePreference(prefs);
 
   await PlayerDatabase.instance.initState();
+  final history = SqliteListeningHistoryRepository(
+    PlayerDatabase.instance.database,
+  );
   PlayerData.instance.configurePlaylists(
     SqlitePlaylistRepository(PlayerDatabase.instance.database),
   );
@@ -42,17 +51,31 @@ Future<bool> bootstrap() async {
   PlayerData.instance.configureMusicLibrary(
     DefaultMusicLibraryRepository(
       service: musicService,
-      loadPlayedTime: PlayerDatabase.instance.getSongPlayedTime,
+      loadPlayedTime: history.playedTime,
     ),
   );
+  final httpClient = http.Client();
   PlayerData.instance.configureArtwork(
     ArtworkRepository(
       cache: DatabaseArtworkCache(PlayerDatabase.instance),
-      search: DeezerArtworkService(http.Client()),
+      search: DeezerArtworkService(httpClient),
     ),
     LocalArtworkService(),
   );
-  await PlayerData.instance.initHandler();
+  PlayerData.instance.configureRefreshCoordinator(settingsStore);
+  try {
+    await PlayerData.instance.initHandler(history);
+  } catch (_) {
+    httpClient.close();
+    await PlayerDatabase.instance.database.close();
+    rethrow;
+  }
+  AppResources.instance = AppResources(
+    data: PlayerData.instance,
+    database: PlayerDatabase.instance,
+    httpClient: httpClient,
+    settings: settings,
+  );
   return showWelcome;
 }
 

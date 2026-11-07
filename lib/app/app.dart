@@ -15,16 +15,43 @@ import 'package:player/theme_data/light_theme.dart';
 import 'package:player/theme_data/theme_provider.dart';
 import 'package:provider/provider.dart';
 
-class HarmonyApp extends StatelessWidget {
+import 'dart:async';
+
+import 'package:player/app/app_resources.dart';
+
+class HarmonyApp extends StatefulWidget {
   const HarmonyApp({super.key, required this.showWelcome});
 
   final bool showWelcome;
 
   @override
+  State<HarmonyApp> createState() => _HarmonyAppState();
+}
+
+class _HarmonyAppState extends State<HarmonyApp> {
+  @override
+  void dispose() {
+    unawaited(
+      AppResources.instance.dispose().catchError((
+        Object error,
+        StackTrace stack,
+      ) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'application shutdown',
+          ),
+        );
+      }),
+    );
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: PlayerData.instance),
         ChangeNotifierProvider.value(
           value: PlayerData.instance.playlistController,
         ),
@@ -32,16 +59,25 @@ class HarmonyApp extends StatelessWidget {
           value: PlayerData.instance.libraryController,
         ),
         ChangeNotifierProvider.value(value: PlayerData.instance.handler),
-        ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider.value(value: PlayerSettings.instance),
+        ChangeNotifierProvider(
+          create: (context) =>
+              ThemeProvider(AppResources.instance.settings.store),
+        ),
+        ChangeNotifierProvider.value(value: AppResources.instance.settings),
       ],
       child: Consumer2<ThemeProvider, PlayerSettings>(
-        child: HomePage(showWelcome: showWelcome),
+        child: HomePage(showWelcome: widget.showWelcome),
         builder: (context, themeValue, settingsValue, child) {
           return MaterialApp(
             themeMode: themeValue.selectedThemeMode,
-            theme: LightTheme.getTheme(themeValue.selectedPrimaryColor),
-            darkTheme: DarkTheme.getTheme(themeValue.selectedPrimaryColor),
+            theme: LightTheme.getTheme(
+              themeValue.selectedPrimaryColor,
+              themeValue.selectedTopBarTheme,
+            ),
+            darkTheme: DarkTheme.getTheme(
+              themeValue.selectedPrimaryColor,
+              themeValue.selectedTopBarTheme,
+            ),
             debugShowCheckedModeBanner: false,
             supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: AppLocalizations.localizationsDelegates,

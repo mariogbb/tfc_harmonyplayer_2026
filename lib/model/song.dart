@@ -11,11 +11,11 @@ class SongData {
   Duration playedTime;
 
   String get title => model.title;
-  String get artist => model.artist.toString();
-  String get album => model.album.toString();
+  String get artist => model.artist ?? 'Unknown artist';
+  String get album => model.album ?? 'Unknown album';
   int get id => model.id;
-  int get trackNum => (model.track! % 1000).toInt();
-  Duration get duration => Duration(milliseconds: model.duration!);
+  int get trackNum => (model.track ?? 0) % 1000;
+  Duration get duration => Duration(milliseconds: model.duration ?? 0);
   Uint8List get artwork => albumModel.artwork;
   ArtistData get artistModel => _getArtist();
 
@@ -27,6 +27,16 @@ class SongData {
   });
 
   ArtistData _getArtist() {
-    return _artists.firstWhere((element) => element.id == model.artistId!);
+    return _artists.firstWhere(
+      (element) => element.id == model.artistId,
+      orElse: () => ArtistData(
+        ArtistMetadata(
+          id: model.artistId ?? -1,
+          artist: model.artist ?? 'Unknown artist',
+        ),
+        albums: [albumModel],
+        songs: albumModel.songList,
+      ),
+    );
   }
 }

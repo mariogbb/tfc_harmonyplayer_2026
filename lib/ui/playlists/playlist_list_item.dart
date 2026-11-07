@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:player/ui/playlists/playlist_dialogs.dart';
 import 'package:provider/provider.dart';
 import 'package:player/model/playlist.dart';
 import 'package:player/l10n/app_localizations.dart';
@@ -20,12 +21,12 @@ class PlaylistItem extends StatelessWidget {
           return [
             PopupMenuItem<int>(
               value: 1,
-              enabled: (playlist.name != "Liked songs"),
+              enabled: playlist.id != 1,
               child: ListTile(
                 title: Text(
                   AppLocalizations.of(context)!.delete_playlist,
                   style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                    color: (playlist.name != "Liked songs")
+                    color: (playlist.id != 1)
                         ? null
                         : Theme.of(context).disabledColor,
                   ),
@@ -58,12 +59,7 @@ class PlaylistItem extends StatelessWidget {
               break;
 
             case 2:
-              break;
-
-            case 3:
-              break;
-
-            case 4:
+              PlaylistDialogs.renamePlaylist(context, playlist);
               break;
           }
         },

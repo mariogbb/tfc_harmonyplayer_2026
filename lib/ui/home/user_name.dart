@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:player/l10n/app_localizations.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/settings.dart';
+import 'package:provider/provider.dart';
 
 class UserNameDialog {
   static changeUserNameDialog(BuildContext context) {
-    String text = Settings.getValue<String>("user_name") ?? "user";
+    String text = context.read<PlayerSettings>().getUserName ?? "user";
     bool error = false;
 
     showDialog(
@@ -42,7 +42,7 @@ class UserNameDialog {
                         if (text.isEmpty) {
                           setState(() => error = true);
                         } else {
-                          PlayerSettings.instance.setUserName(text);
+                          context.read<PlayerSettings>().setUserName(text);
                           Navigator.of(context).pop();
                         }
                       },
@@ -65,7 +65,7 @@ class UserNameDialog {
                       if (text.isEmpty) {
                         setState(() => error = true);
                       } else {
-                        PlayerSettings.instance.setUserName(text);
+                        context.read<PlayerSettings>().setUserName(text);
                         Navigator.of(context).pop();
                       }
                     },

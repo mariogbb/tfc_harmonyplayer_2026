@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:player/control/audio_backend.dart';
+import 'package:player/control/listening_time_tracker.dart';
 import 'package:player/control/playback_queue.dart';
-import 'package:player/data/dao.dart';
 import 'package:player/model/album.dart';
 import 'package:player/model/play_context.dart';
 
@@ -12,14 +12,11 @@ import '../model/song.dart';
 
 class PlayerHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler, ChangeNotifier {
-  static final PlayerHandler _playerHandler = PlayerHandler.withBackend(
-    AudioplayersBackend(),
-    PlayerDatabase.instance.addSongDuration,
-  );
-
   final AudioBackend backend;
   final Future<void> Function(int, Duration) savePlayedTime;
   final List<StreamSubscription<dynamic>> _subscriptions = [];
+  final Set<Future<void>> _pendingHistory = {};
+  Future<void>? _backendDisposal;
   Object? lastError;
   int _errorGeneration = 0;
   bool _disposed = false;
@@ -33,12 +30,9 @@ class PlayerHandler extends BaseAudioHandler
   bool _paused = true;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
-  Duration _playedTime = Duration.zero;
-  int _prevDiff = 0;
+  final ListeningTimeTracker _listeningTime = ListeningTimeTracker();
 
   bool get shuffle => _queue.shuffle;
-
-  static PlayerHandler get instance => _playerHandler;
 
   bool get isPaused => _paused;
   SongData? get playingSong => _playing;
@@ -50,16 +44,13 @@ class PlayerHandler extends BaseAudioHandler
   int get getPlayingIndex => _queue.index;
   PlayingContext? get getPlayingContext => _playingContext;
 
-  factory PlayerHandler() {
-    return _playerHandler;
-  }
-
   PlayerHandler.withBackend(this.backend, this.savePlayedTime) {
     _subscriptions.add(
-      backend.states.listen(
-        (state) => playbackState.add(_transformEvent(state)),
-        onError: _reportError,
-      ),
+      backend.states.listen((state) {
+        _paused = state != AudioBackendState.playing;
+        playbackState.add(_transformEvent(state));
+        notifyListeners();
+      }, onError: _reportError),
     );
     _subscriptions.add(
       backend.completed.listen(_songFinished, onError: _reportError),
@@ -117,14 +108,35 @@ class PlayerHandler extends BaseAudioHandler
       },
       androidCompactActionIndices: const [0, 1, 2],
       playing: state == AudioBackendState.playing,
+      processingState: state == AudioBackendState.completed
+          ? AudioProcessingState.completed
+          : state == AudioBackendState.stopped ||
+                state == AudioBackendState.disposed
+          ? AudioProcessingState.idle
+          : AudioProcessingState.ready,
     );
   }
 
   @override
   Future<void> playMediaItem(MediaItem mediaItem) async {}
 
-  void _songFinished(event) {
-    next();
+  void _songFinished(event) async {
+    final song = _queue.next();
+    if (song != null) {
+      _playNow(song);
+    } else {
+      _paused = true;
+      _position = _duration;
+      await flushHistory();
+      if (_disposed) return;
+      playbackState.add(
+        playbackState.value.copyWith(
+          playing: false,
+          processingState: AudioProcessingState.completed,
+        ),
+      );
+      notifyListeners();
+    }
   }
 
   void _durationChanged(Duration dur) {
@@ -134,12 +146,7 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   void _positionChanged(Duration pos) {
-    int diff = pos.inSeconds - _position.inSeconds;
-
-    if (_prevDiff == (diff - 1) || _prevDiff == (diff + 1)) {
-      _prevDiff = diff;
-      _playedTime += const Duration(seconds: 1);
-    }
+    _listeningTime.observe(_position, pos);
 
     _position = pos;
     notifyListeners();
@@ -185,20 +192,31 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   // Player controls
+  void _persistPlayedTime() {
+    final song = _playing;
+    final duration = _listeningTime.take();
+    if (song == null || duration == Duration.zero) return;
+    song.playedTime += duration;
+    late final Future<void> pending;
+    pending = _run(() => savePlayedTime(song.id, duration)).then((_) {
+      _pendingHistory.remove(pending);
+    });
+    _pendingHistory.add(pending);
+  }
+
+  /// Saves the current listening time and waits for prior writes.
+  Future<void> flushHistory() async {
+    _persistPlayedTime();
+    await Future.wait(_pendingHistory.toList());
+  }
+
+  Future<void> get backendClosed => _backendDisposal ?? Future.value();
+
   void _playNow(SongData song) {
     try {
-      if (_playing != null && _playedTime != Duration.zero) {
-        // Save played time
-        final songId = _playing!.id;
-        final playedTime = _playedTime;
-        unawaited(_run(() => savePlayedTime(songId, playedTime)));
-        _playing!.playedTime += _playedTime;
-      }
-
-      _playedTime = Duration.zero;
-      _prevDiff = 0;
-
+      _persistPlayedTime();
       _playing = song;
+      _position = Duration.zero;
       _paused = false;
 
       unawaited(
@@ -282,6 +300,18 @@ class PlayerHandler extends BaseAudioHandler
   }
 
   @override
+  Future<void> stop() async {
+    final stopped = await _run(backend.stop);
+    if (stopped) {
+      _paused = true;
+      _position = Duration.zero;
+      await flushHistory();
+      notifyListeners();
+    }
+    await super.stop();
+  }
+
+  @override
   Future<void> skipToNext() async {
     next();
   }
@@ -316,7 +346,8 @@ class PlayerHandler extends BaseAudioHandler
     for (final subscription in _subscriptions) {
       unawaited(subscription.cancel());
     }
-    unawaited(backend.dispose());
+    _backendDisposal = backend.dispose();
+    unawaited(_backendDisposal);
     super.dispose();
   }
 

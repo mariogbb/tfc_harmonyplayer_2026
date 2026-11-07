@@ -94,8 +94,6 @@
 	"playing_screen_artwork_shape_circle": "Circular",
 	"playing_screen_artwork_shape_square": "Cadrada",
 
-	"backup_sett": "Copia de seguridade",
-	"backup_sett_desc": "Exportar ou importar as playlist e axustes",
 
 	"behaviour_sett": "Comportamento",
 	"behaviour_sett_desc": "Como se comporta o reproductor",
@@ -139,6 +137,7 @@
 	"new_name": "Novo nome",
 	"delete_playlist": "Borrar playlist",
 	"rename_playlist": "Cambiar nome",
+	"playlist_rename_error": "Non se puido cambiar o nome da lista. Pode que xa estea en uso.",
 	"title": "Título",
 	"sort_by": "Ordenar por",
 	"search": "Búsqueda",

@@ -594,18 +594,6 @@ abstract class AppLocalizations {
   /// **'Square'**
   String get playing_screen_artwork_shape_square;
 
-  /// No description provided for @backup_sett.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup'**
-  String get backup_sett;
-
-  /// No description provided for @backup_sett_desc.
-  ///
-  /// In en, this message translates to:
-  /// **'Export or import playlist and settings'**
-  String get backup_sett_desc;
-
   /// No description provided for @behaviour_sett.
   ///
   /// In en, this message translates to:
@@ -809,6 +797,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rename playlist'**
   String get rename_playlist;
+
+  /// No description provided for @playlist_rename_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t rename the playlist. The name may already be in use.'**
+  String get playlist_rename_error;
 
   /// No description provided for @title.
   ///

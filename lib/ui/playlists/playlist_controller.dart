@@ -13,6 +13,15 @@ class PlaylistController extends ChangeNotifier {
   bool _disposed = false;
   Object? error;
   bool isLoading = false;
+  int _loadGeneration = 0;
+
+  void invalidateLoads() {
+    _loadGeneration++;
+    if (isLoading) {
+      isLoading = false;
+      if (!_disposed) notifyListeners();
+    }
+  }
 
   Future<T?> _perform<T>(Future<T> Function() operation) async {
     try {
@@ -33,10 +42,11 @@ class PlaylistController extends ChangeNotifier {
   }
 
   Future<void> load(List<SongData> songs) async {
+    final generation = ++_loadGeneration;
     isLoading = true;
     notifyListeners();
     final loaded = await _perform(() => repository.load(songs));
-    if (_disposed) return;
+    if (_disposed || generation != _loadGeneration) return;
     isLoading = false;
     if (loaded == null) {
       notifyListeners();
@@ -58,34 +68,37 @@ class PlaylistController extends ChangeNotifier {
   }
 
   Future<void> addSong(PlaylistData playlist, SongData song) async {
-    if (playlist.songs.contains(song)) return;
+    if (playlist.songs.any((item) => item.id == song.id)) return;
     final success = await _perform(() async {
       await repository.addSong(playlist.id, song.id);
       return true;
     });
     if (success != true) return;
     if (_disposed) return;
-    if (!playlist.songs.contains(song)) playlist.songs.add(song);
+    if (!playlist.songs.any((item) => item.id == song.id)) {
+      playlist.songs.add(song);
+    }
     notifyListeners();
   }
 
   Future<void> removeSong(PlaylistData playlist, SongData song) async {
-    if (!playlist.songs.contains(song)) return;
+    if (!playlist.songs.any((item) => item.id == song.id)) return;
     final success = await _perform(() async {
       await repository.removeSong(playlist.id, song.id);
       return true;
     });
     if (success != true) return;
     if (_disposed) return;
-    playlist.songs.remove(song);
+    playlist.songs.removeWhere((item) => item.id == song.id);
     notifyListeners();
   }
 
-  Future<void> rename(String name, PlaylistData playlist) async {
+  Future<bool> rename(String name, PlaylistData playlist) async {
     final renamed = await _perform(() => repository.rename(playlist.id, name));
-    if (_disposed || renamed != true) return;
+    if (_disposed || renamed != true) return false;
     playlist.name = name;
     notifyListeners();
+    return true;
   }
 
   Future<void> delete(PlaylistData playlist) async {
@@ -102,6 +115,7 @@ class PlaylistController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _loadGeneration++;
     super.dispose();
   }
 }

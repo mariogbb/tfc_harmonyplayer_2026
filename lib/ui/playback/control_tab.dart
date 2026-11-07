@@ -1,15 +1,14 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:player/ui/core/adaptive_layout.dart';
 import 'package:player/data/data.dart';
 import 'package:player/model/play_context.dart';
-import 'package:player/model/playlist.dart';
 import 'package:player/model/song.dart';
 import 'package:player/l10n/app_localizations.dart';
 import 'package:player/control/media_control.dart';
 import 'package:player/ui/core/generic_artwork.dart';
 import 'package:player/ui/playlists/playlist_controller.dart';
+import 'package:player/ui/playback/queue_carousel.dart';
 import 'package:provider/provider.dart';
 import 'package:player/utils/extensions.dart';
 
@@ -30,8 +29,6 @@ class PlayerControlTabState extends State<PlayerControlTab>
 
   bool _opened = false;
 
-  final CarouselSliderController carouselController =
-      CarouselSliderController();
   final DraggableScrollableController normalScrollController =
       DraggableScrollableController();
 
@@ -39,18 +36,21 @@ class PlayerControlTabState extends State<PlayerControlTab>
       DraggableScrollableController();
 
   bool _isLiked(SongData? data) {
-    bool liked = false;
+    return context.read<PlaylistController>().playlists.any(
+      (playlist) =>
+          playlist.id == 1 && playlist.songs.any((song) => song.id == data?.id),
+    );
+  }
 
-    try {
-      PlaylistData playlistData = context
-          .read<PlaylistController>()
-          .playlists
-          .firstWhere((element) => element.id == 1);
-
-      liked = playlistData.songs.contains(data);
-    } catch (_) {}
-
-    return liked;
+  Future<void> _toggleLike(PlaylistController playlists, SongData? song) async {
+    if (song == null) return;
+    final liked = playlists.playlists.where((playlist) => playlist.id == 1);
+    if (liked.isEmpty) return;
+    if (liked.first.songs.any((item) => item.id == song.id)) {
+      await playlists.removeSong(liked.first, song);
+    } else {
+      await playlists.addSong(liked.first, song);
+    }
   }
 
   String _getTopContextString(PlayingContext playingContext) {
@@ -76,7 +76,6 @@ class PlayerControlTabState extends State<PlayerControlTab>
     return IconButton(
       onPressed: () {
         widget.handler.next();
-        carouselController.nextPage();
       },
       icon: const Icon(Icons.skip_next),
     );
@@ -86,7 +85,6 @@ class PlayerControlTabState extends State<PlayerControlTab>
     return IconButton(
       onPressed: () {
         widget.handler.previous();
-        carouselController.previousPage();
       },
       icon: const Icon(Icons.skip_previous),
     );
@@ -111,42 +109,26 @@ class PlayerControlTabState extends State<PlayerControlTab>
   Widget _albumImageCarousel(BuildContext context, Axis orientation) {
     return Consumer<PlayerHandler>(
       builder: (context, value, child) {
-        return CarouselSlider.builder(
+        return QueueCarousel(
           itemCount: value.getCompleteQueue.length,
-          itemBuilder: (context, index, realIndex) {
+          index: value.getPlayingIndex,
+          itemBuilder: (context, index) {
             return _albumImage(
               context,
               orientation,
               value.getCompleteQueue[index],
             );
           },
-          carouselController: carouselController,
-          options: CarouselOptions(
-            viewportFraction: 1,
-            initialPage: value.getPlayingIndex,
-            enlargeCenterPage: true,
-            height: (orientation == Axis.vertical)
-                ? MediaQuery.of(context).size.height * 0.4
-                : MediaQuery.of(context).size.height * 0.8,
-            enlargeStrategy: CenterPageEnlargeStrategy.height,
-            enlargeFactor: 0.5,
-            onPageChanged: (index, reason) {
-              if (reason == CarouselPageChangedReason.manual) {
-                if (value.getPlayingIndex > index) {
-                  if (index != 0) {
-                    widget.handler.previous();
-                  }
-                } else {
-                  if (index != (value.getCompleteQueue.length - 1)) {
-                    widget.handler.next();
-                  }
-                }
-              }
-            },
-            disableCenter: false,
-            enableInfiniteScroll: false,
-            scrollPhysics: const BouncingScrollPhysics(),
-          ),
+          height: (orientation == Axis.vertical)
+              ? MediaQuery.of(context).size.height * 0.4
+              : MediaQuery.of(context).size.height * 0.8,
+          onManualPage: (index) {
+            if (value.getPlayingIndex > index) {
+              widget.handler.previous();
+            } else {
+              widget.handler.next();
+            }
+          },
         );
       },
     );
@@ -337,22 +319,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
                     builder: (context, value, playlists, child) {
                       return IconButton(
                         onPressed: () async {
-                          PlaylistData playlistData = playlists.playlists
-                              .firstWhere((element) => element.id == 1);
-
-                          if (value.playingSong != null) {
-                            if (_isLiked(value.playingSong)) {
-                              await playlists.removeSong(
-                                playlistData,
-                                value.playingSong!,
-                              );
-                            } else {
-                              await playlists.addSong(
-                                playlistData,
-                                value.playingSong!,
-                              );
-                            }
-                          }
+                          await _toggleLike(playlists, value.playingSong);
                         },
                         icon: (_isLiked(value.playingSong))
                             ? Icon(
@@ -452,23 +419,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
               builder: (context, value, playlists, child) {
                 return IconButton(
                   onPressed: () async {
-                    PlaylistData playlistData = playlists.playlists.firstWhere(
-                      (element) => element.id == 1,
-                    );
-
-                    if (value.playingSong != null) {
-                      if (_isLiked(value.playingSong)) {
-                        await playlists.removeSong(
-                          playlistData,
-                          value.playingSong!,
-                        );
-                      } else {
-                        await playlists.addSong(
-                          playlistData,
-                          value.playingSong!,
-                        );
-                      }
-                    }
+                    await _toggleLike(playlists, value.playingSong);
                   },
                   icon: (_isLiked(value.playingSong))
                       ? Icon(
@@ -594,30 +545,28 @@ class PlayerControlTabState extends State<PlayerControlTab>
       bottom: true,
       child: NotificationListener<DraggableScrollableNotification>(
         onNotification: (value) {
-          try {
-            double switchValue = 0.4;
-            bool prevState = _opened;
+          double switchValue = 0.4;
+          bool prevState = _opened;
 
-            if (value.extent == value.minExtent) {
-              setState(() {
-                _opened = false;
-              });
-            }
+          if (value.extent == value.minExtent) {
+            setState(() {
+              _opened = false;
+            });
+          }
 
-            if (!_opened && value.extent >= switchValue) {
-              setState(() {
-                _opened = true;
-              });
-            } else if (_opened && value.extent < switchValue) {
-              setState(() {
-                _opened = false;
-              });
-            }
+          if (!_opened && value.extent >= switchValue) {
+            setState(() {
+              _opened = true;
+            });
+          } else if (_opened && value.extent < switchValue) {
+            setState(() {
+              _opened = false;
+            });
+          }
 
-            if (prevState != _opened) {
-              widget.onEvent!(_opened);
-            }
-          } catch (_) {}
+          if (prevState != _opened) {
+            widget.onEvent?.call(_opened);
+          }
 
           return false;
         },
@@ -674,30 +623,28 @@ class PlayerControlTabState extends State<PlayerControlTab>
   Widget buildNormal(BuildContext context) {
     return NotificationListener<DraggableScrollableNotification>(
       onNotification: (value) {
-        try {
-          double switchValue = 0.15;
-          bool prevValue = _opened;
+        double switchValue = 0.15;
+        bool prevValue = _opened;
 
-          if (value.extent == value.minExtent) {
-            setState(() {
-              _opened = false;
-            });
-          }
+        if (value.extent == value.minExtent) {
+          setState(() {
+            _opened = false;
+          });
+        }
 
-          if (!_opened && value.extent >= switchValue) {
-            setState(() {
-              _opened = true;
-            });
-          } else if (_opened && value.extent < switchValue) {
-            setState(() {
-              _opened = false;
-            });
-          }
+        if (!_opened && value.extent >= switchValue) {
+          setState(() {
+            _opened = true;
+          });
+        } else if (_opened && value.extent < switchValue) {
+          setState(() {
+            _opened = false;
+          });
+        }
 
-          if (prevValue != _opened) {
-            widget.onEvent!(_opened);
-          }
-        } catch (_) {}
+        if (prevValue != _opened) {
+          widget.onEvent?.call(_opened);
+        }
         return true;
       },
       child: AnimatedSwitcher(
