@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/services.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:player/data/services/artwork/fallback_artwork.dart';
 
 class LocalArtworkService {
   Future<Uint8List> loadAlbumArtwork(int id) async {
@@ -24,10 +25,6 @@ class LocalArtworkService {
       }
     }
     if (artwork != null) return artwork;
-    final placeholder = await rootBundle.load('assets/no_artwork_icon.png');
-    return placeholder.buffer.asUint8List(
-      placeholder.offsetInBytes,
-      placeholder.lengthInBytes,
-    );
+    return fallbackArtwork;
   }
 }

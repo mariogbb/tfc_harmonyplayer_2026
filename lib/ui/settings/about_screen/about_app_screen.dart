@@ -1,78 +1,61 @@
 import 'package:flutter/material.dart';
-import 'package:player/ui/settings/about_screen/changelog_dialogs.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:player/l10n/app_localizations.dart';
-import 'package:player/ui/settings/about_screen/contact_dialog.dart';
+import 'package:player/ui/settings/settings_section.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutAppScreen extends StatelessWidget {
-  const AboutAppScreen({Key? key}) : super(key: key);
-
-  AppBar _getAppbar(BuildContext context) {
-    return AppBar(title: Text(AppLocalizations.of(context)!.about));
-  }
+  const AboutAppScreen({super.key, this.launchEmail});
+  final Future<bool> Function(Uri)? launchEmail;
 
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
-        .copyWith(color: Theme.of(context).primaryColor);
-
+    final labels = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     return SafeArea(
-      top: true,
-      child: Scaffold(
-        extendBody: false,
-        appBar: _getAppbar(context),
-        extendBodyBehindAppBar: false,
-        body: SafeArea(
-          bottom: true,
-          child: Center(
-            heightFactor: 1,
-            child: SingleChildScrollView(
-              child: ListView(
-                padding: const EdgeInsets.only(left: 20),
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                children: [
-                  ListTile(
-                    title: Text(
-                      AppLocalizations.of(context)!.bugs_and_features,
-                      style: titleStyle,
-                    ),
+      child: AdaptiveSettingsScreen(
+        title: labels.about,
+        children: [
+          SettingsSection(
+            title: 'Harmony Player',
+            children: [
+              ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: theme.primaryColor.withValues(alpha: 0.14),
+                  child: Icon(
+                    Icons.graphic_eq_rounded,
+                    color: theme.primaryColor,
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.bug_report_outlined),
-                    title: Text(AppLocalizations.of(context)!.report_a_bug),
-                  ),
-                  GestureDetector(
-                    onTap: () => ContactDialog.showContactDialog(context),
-                    child: ListTile(
-                      leading: const Icon(Icons.email_outlined),
-                      title: Text(AppLocalizations.of(context)!.contact),
-                    ),
-                  ),
-                  ListTile(
-                    title: Text(
-                      AppLocalizations.of(context)!.others,
-                      style: titleStyle,
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.info_outline),
-                    title: Text(AppLocalizations.of(context)!.app_version),
-                    subtitle: const Text("0.3.73"),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      AppChangelogDialogs.launchChangelogDialog(context);
-                    },
-                    child: ListTile(
-                      leading: const Icon(Icons.list_alt),
-                      title: Text(AppLocalizations.of(context)!.changelog),
-                    ),
-                  ),
-                ],
+                ),
+                title: Text(labels.app_version),
+                subtitle: FutureBuilder<PackageInfo>(
+                  future: PackageInfo.fromPlatform(),
+                  builder: (context, snapshot) => snapshot.hasData
+                      ? Text(snapshot.data!.version)
+                      : const SizedBox.shrink(),
+                ),
               ),
-            ),
+            ],
           ),
-        ),
+          SettingsSection(
+            title: labels.bugs_and_features,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.bug_report_outlined),
+                title: Text(labels.report_a_bug),
+                enabled: false,
+              ),
+              ListTile(
+                leading: const Icon(Icons.email_outlined),
+                title: const Text('mario.besada.dev@gmail.com'),
+                subtitle: Text(labels.contact),
+                onTap: () => (launchEmail ?? launchUrl)(
+                  Uri(scheme: 'mailto', path: 'mario.besada.dev@gmail.com'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

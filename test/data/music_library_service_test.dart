@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:player/data/data.dart';
 import 'package:player/data/linux_music.dart';
@@ -73,7 +72,6 @@ void main() {
     'PlayerData loads an injected library without platform plugins',
     () async {
       SharedPreferences.setMockInitialValues({});
-      await Settings.init();
 
       final library = FakeMusicLibrary();
       final data = PlayerData.internal()

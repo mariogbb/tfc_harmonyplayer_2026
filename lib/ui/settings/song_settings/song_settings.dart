@@ -1,58 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:player/l10n/app_localizations.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/settings.dart';
+import 'package:player/l10n/app_localizations.dart';
+import 'package:player/ui/settings/settings_controls.dart';
+import 'package:player/ui/settings/settings_section.dart';
 import 'package:provider/provider.dart';
 
-class SongSettingsScreen extends StatefulWidget {
-  const SongSettingsScreen({Key? key}) : super(key: key);
+class SongSettingsScreen extends StatelessWidget {
+  const SongSettingsScreen({super.key});
 
-  @override
-  SongSettingsScreenState createState() => SongSettingsScreenState();
-}
-
-class SongSettingsScreenState extends State<SongSettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
-        .copyWith(color: Theme.of(context).primaryColor);
-
+    final labels = AppLocalizations.of(context)!;
+    final settings = context.watch<PlayerSettings>();
     return SafeArea(
-      top: true,
-      child: SettingsScreen(
-        title: AppLocalizations.of(context)!.song_settings,
+      child: AdaptiveSettingsScreen(
+        title: labels.song_settings,
         children: [
-          SettingsGroup(
-            titleTextStyle: titleStyle,
-            title: AppLocalizations.of(context)!.filters,
+          SettingsSection(
+            title: labels.filters,
             children: [
-              Consumer<PlayerSettings>(
-                builder: (context, value, child) {
-                  return SwitchSettingsTile(
-                    title: AppLocalizations.of(context)!.smart_filter_sett,
-                    subtitle: AppLocalizations.of(context)!
-                        .smart_filter_sett_desc,
-                    settingKey: "smartFilterEnabled",
-                    onChange: value.setSmartFilterEnabled,
-                  );
-                },
+              SettingsToggle(
+                title: labels.smart_filter_sett,
+                subtitle: labels.smart_filter_sett_desc,
+                value: settings.isSmartFilterEnabled,
+                onChanged: settings.setSmartFilterEnabled,
               ),
-              Consumer<PlayerSettings>(
-                builder: (context, value, child) {
-                  return SliderSettingsTile(
-                    max: 120,
-                    min: 0,
-                    step: 1,
-                    title: AppLocalizations.of(context)!
-                        .minimum_song_lenght_sett,
-                    subtitle: AppLocalizations.of(context)!
-                        .minimum_song_lenght_sett_desc,
-                    settingKey: "filterDuration",
-                    onChange: (p0) {
-                      value.setFilterDuration(p0);
-                    },
-                  );
-                },
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      labels.minimum_song_lenght_sett,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    Text(
+                      labels.minimum_song_lenght_sett_desc,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Slider(
+                            min: 0,
+                            max: 120,
+                            divisions: 120,
+                            value: settings.getFilterDuration.clamp(0, 120),
+                            onChanged: settings.setFilterDuration,
+                          ),
+                        ),
+                        Text('${settings.getFilterDuration.round()} s'),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

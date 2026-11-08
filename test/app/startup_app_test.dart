@@ -5,28 +5,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:player/app/startup_app.dart';
 
 void main() {
-  testWidgets(
-    'shows progress and passes the initialization result to the app',
-    (tester) async {
-      final initialization = Completer<bool>();
-      await tester.pumpWidget(
-        StartupApp(
-          initialize: () => initialization.future,
-          appBuilder: (showWelcome) =>
-              MaterialApp(home: Text('welcome: $showWelcome')),
-        ),
-      );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      initialization.complete(true);
-      await tester.pumpAndSettle();
-      expect(find.text('welcome: true'), findsOneWidget);
-    },
-  );
+  testWidgets('shows progress and opens the app after initialization', (
+    tester,
+  ) async {
+    final initialization = Completer<void>();
+    await tester.pumpWidget(
+      StartupApp(
+        initialize: () => initialization.future,
+        appBuilder: () => const MaterialApp(home: Text('App ready')),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    initialization.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('App ready'), findsOneWidget);
+  });
 
   testWidgets('shows an actionable error without exposing the exception', (
     tester,
   ) async {
-    final initialization = Completer<bool>();
+    final initialization = Completer<void>();
     final previous = FlutterError.onError;
     final reports = <FlutterErrorDetails>[];
     FlutterError.onError = reports.add;
@@ -34,7 +32,7 @@ void main() {
     await tester.pumpWidget(
       StartupApp(
         initialize: () => initialization.future,
-        appBuilder: (_) => const MaterialApp(home: Text('Unexpected success')),
+        appBuilder: () => const MaterialApp(home: Text('Unexpected success')),
       ),
     );
     initialization.completeError(StateError('sensitive database path'));

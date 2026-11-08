@@ -10,7 +10,7 @@ package="dev.mariobesada.player">
     
    <application
         android:label="Harmony Player"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
 
 
         <activity

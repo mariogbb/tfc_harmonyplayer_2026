@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 
 import 'package:player/theme_data/top_bar_theme.dart';
+import 'package:player/theme_data/neo_style.dart';
 import 'package:player/utils/extensions.dart';
 import 'package:player/data/services/settings/settings_store.dart';
 
@@ -38,7 +39,7 @@ class ThemeProvider with ChangeNotifier {
   }
 
   static Color recoverColor(SettingsStore store) {
-    Color c = Colors.deepPurple;
+    Color c = NeoStyle.defaultAccent;
 
     String? color = store.read<String>("accent_color");
 

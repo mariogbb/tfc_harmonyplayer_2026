@@ -4,6 +4,7 @@ import 'package:player/ui/settings/about_screen/about_app_screen.dart';
 import 'package:player/ui/settings/app_settings/app_settings_screen.dart';
 import 'package:player/ui/settings/look_and_feel/look_and_feel.dart';
 import 'package:player/ui/settings/song_settings/song_settings.dart';
+import 'package:player/ui/core/library_row.dart';
 
 List<Widget> menuEntries(BuildContext context) {
   return [
@@ -13,7 +14,10 @@ List<Widget> menuEntries(BuildContext context) {
       leadingIcon: Icons.palette,
       onClick: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const LookAndFeelScreen()),
+          MaterialPageRoute(
+            settings: const RouteSettings(name: 'settings/appearance'),
+            builder: (context) => const LookAndFeelScreen(),
+          ),
         );
       },
       context: context,
@@ -24,7 +28,10 @@ List<Widget> menuEntries(BuildContext context) {
       leadingIcon: Icons.music_note,
       onClick: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const SongSettingsScreen()),
+          MaterialPageRoute(
+            settings: const RouteSettings(name: 'settings/songs'),
+            builder: (context) => const SongSettingsScreen(),
+          ),
         );
       },
       context: context,
@@ -36,6 +43,7 @@ List<Widget> menuEntries(BuildContext context) {
       onClick: () {
         Navigator.of(context).push(
           MaterialPageRoute(
+            settings: const RouteSettings(name: 'settings/general'),
             builder: (context) => const AppGeneralSettingsScreen(),
           ),
         );
@@ -47,9 +55,12 @@ List<Widget> menuEntries(BuildContext context) {
       subTitleText: AppLocalizations.of(context)!.about_desc,
       leadingIcon: Icons.info_outlined,
       onClick: () {
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => const AboutAppScreen()));
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            settings: const RouteSettings(name: 'settings/about'),
+            builder: (context) => const AboutAppScreen(),
+          ),
+        );
       },
       context: context,
     ),
@@ -63,16 +74,22 @@ Widget menuEntry({
   required VoidCallback onClick,
   required BuildContext context,
 }) {
-  return GestureDetector(
-    onTap: () => onClick(),
+  return LibraryRow(
     child: ListTile(
+      onTap: onClick,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       leading: CircleAvatar(
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.14),
+        foregroundColor: Theme.of(context).primaryColor,
         child: Icon(leadingIcon),
       ),
-      title: Text(titleText, style: Theme.of(context).textTheme.headlineSmall),
+      title: Text(
+        titleText,
+        style: Theme.of(context).textTheme.titleMedium
+            ?.copyWith(fontWeight: FontWeight.w700),
+      ),
       subtitle: Text(subTitleText),
+      trailing: const Icon(Icons.chevron_right_rounded),
     ),
   );
 }

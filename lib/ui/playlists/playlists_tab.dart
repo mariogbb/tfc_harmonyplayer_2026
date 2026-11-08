@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:player/ui/playlists/playlist_controller.dart';
 import 'package:player/ui/playlists/playlist_dialogs.dart';
 import 'package:player/ui/playlists/playlist_list_item.dart';
+import 'package:player/ui/core/library_header.dart';
 import 'package:provider/provider.dart';
 import 'package:player/l10n/app_localizations.dart';
 
@@ -30,32 +31,16 @@ class PlaylistTab extends StatelessWidget {
           itemCount: value.playlists.length + 1,
           itemBuilder: (context, index) {
             if (index == 0) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 50),
-                child: ListTile(
-                  title: Row(
-                    verticalDirection: VerticalDirection.down,
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)!.playlist_tab,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      Text(
-                        " (${value.playlists.length})",
-                        textAlign: TextAlign.end,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                    ],
-                  ),
-                  trailing: IconButton(
+              return LibraryHeader(
+                title: AppLocalizations.of(context)!.playlist_tab,
+                count: value.playlists.length,
+                actions: [
+                  IconButton(
                     onPressed: () =>
                         PlaylistDialogs.createPlaylistPopup(context),
                     icon: const Icon(Icons.playlist_add),
                   ),
-                ),
+                ],
               );
             }
 

@@ -45,7 +45,7 @@ void main() {
     addTearDown(theme.dispose);
     expect(theme.selectedThemeMode, ThemeMode.system);
     expect(theme.selectedTopBarTheme, TopBarTheme.seamless);
-    expect(theme.selectedPrimaryColor, Colors.deepPurple);
+    expect(theme.selectedPrimaryColor, const Color(0xff365cb9));
   });
 
   test('reports settings write failures and flush waits for writes', () async {

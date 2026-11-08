@@ -9,6 +9,7 @@ import 'package:player/l10n/app_localizations.dart';
 import 'package:player/model/top_recopilations.dart';
 import 'package:player/ui/core/control_padding.dart';
 import 'package:player/ui/library/songs/song_list.dart';
+import 'package:player/ui/core/desktop_content_scope.dart';
 
 class TopSongsRanking extends StatefulWidget {
   const TopSongsRanking({Key? key}) : super(key: key);
@@ -59,9 +60,12 @@ class TopSongsRankingState extends State<TopSongsRanking> {
     return SafeArea(
       top: true,
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        bottomSheet: PlayerControlTab(),
-        appBar: AppBar(actions: const [], title: const Text("")),
+        bottomSheet: DesktopContentScope.isActive(context)
+            ? null
+            : PlayerControlTab(),
+        appBar: DesktopContentScope.isActive(context)
+            ? null
+            : AppBar(title: Text(AppLocalizations.of(context)!.top_songs)),
         body: ControlPadding(
           child: ListView(
             children: [
@@ -78,6 +82,7 @@ class TopSongsRankingState extends State<TopSongsRanking> {
                   songList,
                 ),
                 ranking: true,
+                sort: SongSort(type: SortType.playingTime, ascendent: false),
                 shrinkWrap: true,
                 physics: const ClampingScrollPhysics(),
               ),

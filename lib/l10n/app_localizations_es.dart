@@ -88,6 +88,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get play => 'Reproducir';
 
   @override
+  String get pause => 'Pausar';
+
+  @override
+  String get previous_track => 'Canción anterior';
+
+  @override
+  String get next_track => 'Canción siguiente';
+
+  @override
+  String get shuffle => 'Aleatorio';
+
+  @override
+  String get toggle_like => 'Cambiar favorito';
+
+  @override
   String get add_to_queue => 'Añadir a la cola';
 
   @override
@@ -245,6 +260,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get show_tab_label => 'Mostrar nombre de tabs';
 
   @override
+  String get show_song_duration => 'Mostrar duración de las canciones';
+
+  @override
+  String get invalid_hex_color => 'Introduce un color hexadecimal válido';
+
+  @override
   String get playing_screen_sett => 'Pantalla de reproducción';
 
   @override
@@ -376,6 +397,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get search => 'Búsqueda';
+
+  @override
+  String get search_hint => 'Busca canciones, álbumes o artistas';
+
+  @override
+  String get search_prompt => 'Busca en tu biblioteca para comenzar.';
+
+  @override
+  String get search_no_results => 'No hay resultados. Prueba otra búsqueda.';
+
+  @override
+  String get search_all => 'Todo';
 
   @override
   String get nothing_found => 'No se encontró nada';

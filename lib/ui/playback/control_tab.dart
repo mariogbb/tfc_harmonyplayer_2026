@@ -9,14 +9,19 @@ import 'package:player/control/media_control.dart';
 import 'package:player/ui/core/generic_artwork.dart';
 import 'package:player/ui/playlists/playlist_controller.dart';
 import 'package:player/ui/playback/queue_carousel.dart';
+import 'package:player/theme_data/neo_style.dart';
+import 'package:player/ui/core/neo_icon_button.dart';
 import 'package:provider/provider.dart';
 import 'package:player/utils/extensions.dart';
+import 'package:player/data/services/artwork/fallback_artwork.dart';
 
 class PlayerControlTab extends StatefulWidget {
-  PlayerControlTab({Key? key, this.onEvent}) : super(key: key);
+  PlayerControlTab({Key? key, this.onEvent, PlayerHandler? handler})
+    : handler = handler ?? PlayerData.instance.handler,
+      super(key: key);
 
   final PlayerData playerData = PlayerData();
-  final PlayerHandler handler = PlayerData.instance.handler;
+  final PlayerHandler handler;
   final ValueChanged<bool>? onEvent;
 
   @override
@@ -34,6 +39,23 @@ class PlayerControlTabState extends State<PlayerControlTab>
 
   final DraggableScrollableController largeScrollController =
       DraggableScrollableController();
+
+  @override
+  void dispose() {
+    normalScrollController.dispose();
+    largeScrollController.dispose();
+    super.dispose();
+  }
+
+  void _setPlayerExpanded(bool expanded, {required bool large}) {
+    final controller = large ? largeScrollController : normalScrollController;
+    if (!controller.isAttached) return;
+    controller.animateTo(
+      expanded ? 1 : (large ? 0.2 : 0.1),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+    );
+  }
 
   bool _isLiked(SongData? data) {
     return context.read<PlaylistController>().playlists.any(
@@ -72,41 +94,46 @@ class PlayerControlTabState extends State<PlayerControlTab>
     }
   }
 
-  IconButton nextSongButton() {
-    return IconButton(
+  Widget nextSongButton() {
+    return NeoIconButton(
       onPressed: () {
         widget.handler.next();
       },
-      icon: const Icon(Icons.skip_next),
+      tooltip: AppLocalizations.of(context)!.next_track,
+      icon: Icons.skip_next,
     );
   }
 
-  IconButton previousSongButton() {
-    return IconButton(
+  Widget previousSongButton() {
+    return NeoIconButton(
       onPressed: () {
         widget.handler.previous();
       },
-      icon: const Icon(Icons.skip_previous),
+      tooltip: AppLocalizations.of(context)!.previous_track,
+      icon: Icons.skip_previous,
     );
   }
 
   Consumer shuffleSongButton() {
     return Consumer<PlayerHandler>(
       builder: (context, value, child) {
-        return IconButton(
-          color: (value.shuffle) ? Theme.of(context).primaryColor : null,
+        return NeoIconButton(
+          selected: value.shuffle,
+          tooltip: AppLocalizations.of(context)!.shuffle,
           onPressed: () {
-            widget.playerData.handler.switchShuffleMode(
-              !widget.playerData.handler.shuffle,
-            );
+            widget.handler.switchShuffleMode(!widget.handler.shuffle);
           },
-          icon: const Icon(Icons.shuffle),
+          icon: Icons.shuffle,
         );
       },
     );
   }
 
-  Widget _albumImageCarousel(BuildContext context, Axis orientation) {
+  Widget _albumImageCarousel(
+    BuildContext context,
+    Axis orientation, {
+    double? height,
+  }) {
     return Consumer<PlayerHandler>(
       builder: (context, value, child) {
         return QueueCarousel(
@@ -119,9 +146,11 @@ class PlayerControlTabState extends State<PlayerControlTab>
               value.getCompleteQueue[index],
             );
           },
-          height: (orientation == Axis.vertical)
-              ? MediaQuery.of(context).size.height * 0.4
-              : MediaQuery.of(context).size.height * 0.8,
+          height:
+              height ??
+              ((orientation == Axis.vertical)
+                  ? MediaQuery.of(context).size.height * 0.4
+                  : MediaQuery.of(context).size.height * 0.8),
           onManualPage: (index) {
             if (value.getPlayingIndex > index) {
               widget.handler.previous();
@@ -140,11 +169,11 @@ class PlayerControlTabState extends State<PlayerControlTab>
       child: Consumer<PlayerHandler>(
         builder: (context, value, child) {
           if (song == null) {
-            return Image.asset("assets/no_artwork_icon.png", fit: BoxFit.fill);
+            return Image.memory(fallbackArtwork, fit: BoxFit.cover);
           }
 
           if (song.albumModel.imageURL == null) {
-            return Image.memory(song.albumModel.artwork, fit: BoxFit.fill);
+            return Image.memory(song.albumModel.artwork, fit: BoxFit.cover);
           }
 
           return CachedNetworkImage(
@@ -152,9 +181,9 @@ class PlayerControlTabState extends State<PlayerControlTab>
             fadeInDuration: Duration.zero,
             cacheKey: song.albumModel.id.toString(),
             placeholder: (context, url) {
-              return Image.memory(value.playingSong!.artwork, fit: BoxFit.fill);
+              return Image.memory(song.artwork, fit: BoxFit.cover);
             },
-            fit: BoxFit.fill,
+            fit: BoxFit.cover,
           );
         },
       ),
@@ -162,7 +191,11 @@ class PlayerControlTabState extends State<PlayerControlTab>
   }
 
   Widget pauseSongButton(bool paused) {
-    return IconButton(
+    return NeoIconButton(
+      primary: true,
+      tooltip: paused
+          ? AppLocalizations.of(context)!.play
+          : AppLocalizations.of(context)!.pause,
       onPressed: () {
         if (widget.handler.isPaused) {
           widget.handler.play();
@@ -170,24 +203,26 @@ class PlayerControlTabState extends State<PlayerControlTab>
           widget.handler.pause();
         }
       },
-      icon: paused ? Icon(icons[0]) : Icon(icons[1]),
+      icon: paused ? icons[0] : icons[1],
     );
   }
 
   Widget songSlider(Duration duration, Duration position) {
     return SliderTheme(
       data: SliderThemeData(
-        trackHeight: 1,
+        trackHeight: 4,
         thumbColor: Theme.of(context).primaryColor,
       ),
       child: Slider(
         activeColor: Theme.of(context).primaryColor,
-        value: position.inSeconds.toDouble(),
-        max: duration.inSeconds.toDouble(),
+        value: position.inSeconds
+            .clamp(0, duration.inSeconds < 0 ? 0 : duration.inSeconds)
+            .toDouble(),
+        max: duration.inSeconds.clamp(0, double.maxFinite).toDouble(),
         divisions: (duration.inSeconds > 0) ? duration.inSeconds : 1,
         min: 0.0,
         onChanged: (value) {
-          widget.playerData.handler.seek(Duration(seconds: value.toInt()));
+          widget.handler.seek(Duration(seconds: value.toInt()));
         },
       ),
     );
@@ -230,257 +265,173 @@ class PlayerControlTabState extends State<PlayerControlTab>
     );
   }
 
-  Widget _openedLargeWidget() {
-    return Row(
-      mainAxisSize: MainAxisSize.max,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      verticalDirection: VerticalDirection.down,
-      children: [
-        Expanded(
-          flex: 1,
-          child: ListView(
-            physics: const ClampingScrollPhysics(),
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Center(
-                  child: _albumImageCarousel(context, Axis.horizontal),
-                ),
-              ),
-            ],
+  Widget _openedPlayer({required bool large}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 700;
+        final artworkSize =
+            (wide ? constraints.maxWidth * 0.38 : constraints.maxWidth - 48)
+                .clamp(0.0, wide ? 380.0 : 320.0)
+                .clamp(0.0, MediaQuery.sizeOf(context).height * 0.42);
+        final artwork = Center(
+          child: SizedBox(
+            width: artworkSize,
+            child: _albumImageCarousel(
+              context,
+              Axis.vertical,
+              height: artworkSize,
+            ),
           ),
-        ),
-        Expanded(
-          flex: 1,
-          child: ListView(
-            physics: const ClampingScrollPhysics(),
-            shrinkWrap: true,
-            children: [
-              Consumer<PlayerHandler>(
-                builder: (context, value, child) {
-                  PlayingContext? playingContext = value.getPlayingContext;
-                  String topString = AppLocalizations.of(context)!.now_playing;
-                  String subtitleString = AppLocalizations.of(context)!
-                      .liked_songs;
-
-                  if (playingContext != null) {
-                    topString = _getTopContextString(playingContext);
-                    subtitleString = playingContext.getName;
-                  }
-
-                  return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-                    leading: IconButton(
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                      onPressed: () {
-                        largeScrollController.animateTo(
-                          0.075,
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.linear,
-                        );
-                      },
-                    ),
-                    title: Text(topString, textAlign: TextAlign.center),
-                    subtitle: Text(subtitleString, textAlign: TextAlign.center),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.menu),
-                      onPressed: () {},
-                    ),
-                  );
-                },
-              ),
-              Consumer<PlayerHandler>(
-                builder: (context, value, child) {
-                  return ListTile(
-                    horizontalTitleGap: 0,
-                    leading: Text(value.getPosition.toStringRepresentation()),
-                    trailing: Text(value.getDuration.toStringRepresentation()),
-                    title: songSlider(value.getDuration, value.getPosition),
-                  );
-                },
-              ),
-              Consumer<PlayerHandler>(
-                builder: (context, value, child) {
-                  return _songNameText(value.playingSong);
-                },
-              ),
-              Consumer<PlayerHandler>(
-                builder: (context, value, child) {
-                  return _artistNameText(value.playingSong);
-                },
-              ),
-              const Padding(padding: EdgeInsets.only(top: 40)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+        );
+        final details = Consumer2<PlayerHandler, PlaylistController>(
+          builder: (context, player, playlists, _) {
+            final song = player.playingSong;
+            return Container(
+              decoration: NeoStyle.raised(context, radius: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Consumer2<PlayerHandler, PlaylistController>(
-                    builder: (context, value, playlists, child) {
-                      return IconButton(
-                        onPressed: () async {
-                          await _toggleLike(playlists, value.playingSong);
-                        },
-                        icon: (_isLiked(value.playingSong))
-                            ? Icon(
-                                Icons.favorite,
-                                color: Theme.of(context).primaryColor,
-                              )
-                            : const Icon(Icons.favorite_border),
+                  _songNameText(song),
+                  _artistNameText(song),
+                  const SizedBox(height: 12),
+                  songSlider(player.getDuration, player.getPosition),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          player.getPosition.toStringRepresentation(),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          player.getDuration.toStringRepresentation(),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      NeoIconButton(
+                        onPressed: () => _toggleLike(playlists, song),
+                        selected: _isLiked(song),
+                        tooltip: AppLocalizations.of(context)!.toggle_like,
+                        icon: _isLiked(song)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                      ),
+                      previousSongButton(),
+                      pauseSongButton(player.isPaused),
+                      nextSongButton(),
+                      shuffleSongButton(),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Consumer<PlayerHandler>(
+                    builder: (context, player, _) {
+                      final playingContext = player.getPlayingContext;
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: IconButton(
+                          icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                          onPressed: () =>
+                              _setPlayerExpanded(false, large: large),
+                        ),
+                        title: Text(
+                          playingContext == null
+                              ? AppLocalizations.of(context)!.now_playing
+                              : _getTopContextString(playingContext),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: playingContext == null
+                            ? null
+                            : Text(
+                                playingContext.getName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                       );
                     },
                   ),
-                  previousSongButton(),
-                  Consumer<PlayerHandler>(
-                    builder: (context, value, child) {
-                      return pauseSongButton(value.isPaused);
-                    },
-                  ),
-                  nextSongButton(),
-                  shuffleSongButton(),
+                  const SizedBox(height: 16),
+                  if (wide)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(child: artwork),
+                        const SizedBox(width: 32),
+                        Expanded(child: details),
+                      ],
+                    )
+                  else ...[
+                    artwork,
+                    const SizedBox(height: 24),
+                    details,
+                  ],
                 ],
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _openedNormalWidget() {
-    return ListView(
-      physics: const ClampingScrollPhysics(),
-      shrinkWrap: true,
-      children: [
-        Consumer<PlayerHandler>(
-          builder: (context, value, child) {
-            PlayingContext? playingContext = value.getPlayingContext;
-            String topString = AppLocalizations.of(context)!.now_playing;
-            String subtitleString = AppLocalizations.of(context)!.liked_songs;
-
-            if (playingContext != null) {
-              topString = _getTopContextString(playingContext);
-              subtitleString = playingContext.getName;
-            }
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-              leading: IconButton(
-                icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                onPressed: () {
-                  normalScrollController.animateTo(
-                    0.075,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.linear,
-                  );
-                },
-              ),
-              title: Text(topString, textAlign: TextAlign.center),
-              subtitle: Text(subtitleString, textAlign: TextAlign.center),
-              trailing: IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () {},
-              ),
-            );
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, bottom: 10, right: 20),
-          child: Consumer<PlayerHandler>(
-            builder: (context, value, child) {
-              return _albumImageCarousel(context, Axis.vertical);
-            },
-          ),
-        ),
-        Consumer<PlayerHandler>(
-          builder: (context, value, child) {
-            return ListTile(
-              horizontalTitleGap: 0,
-              leading: Text(value.getPosition.toStringRepresentation()),
-              trailing: Text(value.getDuration.toStringRepresentation()),
-              title: songSlider(value.getDuration, value.getPosition),
-            );
-          },
-        ),
-        Consumer<PlayerHandler>(
-          builder: (context, value, child) {
-            return _songNameText(value.playingSong);
-          },
-        ),
-        Consumer<PlayerHandler>(
-          builder: (context, value, child) {
-            return _artistNameText(value.playingSong);
-          },
-        ),
-        const Padding(padding: EdgeInsets.only(top: 40)),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Consumer2<PlayerHandler, PlaylistController>(
-              builder: (context, value, playlists, child) {
-                return IconButton(
-                  onPressed: () async {
-                    await _toggleLike(playlists, value.playingSong);
-                  },
-                  icon: (_isLiked(value.playingSong))
-                      ? Icon(
-                          Icons.favorite,
-                          color: Theme.of(context).primaryColor,
-                        )
-                      : const Icon(Icons.favorite_border),
-                );
-              },
             ),
-            previousSongButton(),
-            Consumer<PlayerHandler>(
-              builder: (context, value, child) {
-                return pauseSongButton(value.isPaused);
-              },
-            ),
-            nextSongButton(),
-            shuffleSongButton(),
-          ],
-        ),
-      ],
+          ),
+        );
+      },
     );
   }
 
   Widget _closedNormalWidget() {
     return GestureDetector(
+      onTap: () => _setPlayerExpanded(true, large: false),
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity != null) {
           if (details.primaryVelocity! > 0) {
-            PlayerData.instance.handler.next();
+            widget.handler.next();
           } else {
-            PlayerData.instance.handler.previous();
+            widget.handler.previous();
           }
         }
       },
       child: Consumer<PlayerHandler>(
         builder: (context, value, child) {
-          return PreferredSize(
-            preferredSize: Size.fromHeight(
-              MediaQuery.of(context).size.height * 0.1,
-            ),
-            child: ListTile(
-              leading: GenericArtwork(
-                type: ArtworkType.song,
-                shape: ArtworkShape.square,
-                elementId: value.playingSong!.id,
-                artwork: value.playingSong!.artwork,
+          return SizedBox(
+            height: MediaQuery.of(context).size.height * 0.1,
+            child: Center(
+              child: ListTile(
+                leading: GenericArtwork(
+                  type: ArtworkType.song,
+                  shape: ArtworkShape.square,
+                  elementId: value.playingSong!.id,
+                  artwork: value.playingSong!.artwork,
+                ),
+                title: Text(
+                  value.playingSong?.title ?? "",
+                  textAlign: TextAlign.left,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                subtitle: Text(
+                  value.playingSong?.artist ?? "",
+                  textAlign: TextAlign.left,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                trailing: pauseSongButton(value.isPaused),
               ),
-              title: Text(
-                value.playingSong?.title ?? "",
-                textAlign: TextAlign.left,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              subtitle: Text(
-                value.playingSong?.artist ?? "",
-                textAlign: TextAlign.left,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              trailing: pauseSongButton(value.isPaused),
             ),
           );
         },
@@ -492,12 +443,13 @@ class PlayerControlTabState extends State<PlayerControlTab>
     return SafeArea(
       bottom: true,
       child: GestureDetector(
+        onTap: () => _setPlayerExpanded(true, large: true),
         onHorizontalDragEnd: (details) {
           if (details.primaryVelocity != null) {
             if (details.primaryVelocity! > 0) {
-              PlayerData.instance.handler.next();
+              widget.handler.next();
             } else {
-              PlayerData.instance.handler.previous();
+              widget.handler.previous();
             }
           }
         },
@@ -528,7 +480,19 @@ class PlayerControlTabState extends State<PlayerControlTab>
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                   ),
-                  trailing: pauseSongButton(value.isPaused),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      previousSongButton(),
+                      pauseSongButton(value.isPaused),
+                      nextSongButton(),
+                      IconButton(
+                        tooltip: AppLocalizations.of(context)!.now_playing,
+                        onPressed: () => _setPlayerExpanded(true, large: true),
+                        icon: const Icon(Icons.keyboard_arrow_up_rounded),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -584,9 +548,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
                 )
               : (context.watch<PlayerHandler>().playingSong != null)
               ? Container(
-                  color: (_opened)
-                      ? Theme.of(context).primaryColor.withAlpha(50)
-                      : Theme.of(context).primaryColor.withAlpha(50),
+                  decoration: NeoStyle.raised(context, radius: 24),
                   key: const Key("scrollable_detector_large"),
                   child: DraggableScrollableSheet(
                     key: const Key("scrollable-control_large"),
@@ -603,10 +565,10 @@ class PlayerControlTabState extends State<PlayerControlTab>
                         AnimatedSwitcher(
                           switchInCurve: Curves.ease,
                           switchOutCurve: Curves.ease,
-                          duration: const Duration(seconds: 1),
+                          duration: const Duration(milliseconds: 180),
                           reverseDuration: const Duration(milliseconds: 100),
                           child: (_opened)
-                              ? _openedLargeWidget()
+                              ? _openedPlayer(large: true)
                               : _closedLargeWidget(),
                         ),
                       ],
@@ -661,7 +623,7 @@ class PlayerControlTabState extends State<PlayerControlTab>
               )
             : (context.watch<PlayerHandler>().playingSong != null)
             ? Container(
-                color: Theme.of(context).primaryColor.withAlpha(50),
+                decoration: NeoStyle.raised(context, radius: 24),
                 key: const Key("scrollable_detector"),
                 child: DraggableScrollableSheet(
                   key: const Key("scrollable-control"),
@@ -678,10 +640,10 @@ class PlayerControlTabState extends State<PlayerControlTab>
                       AnimatedSwitcher(
                         switchInCurve: Curves.ease,
                         switchOutCurve: Curves.ease,
-                        duration: const Duration(seconds: 1),
+                        duration: const Duration(milliseconds: 180),
                         reverseDuration: const Duration(milliseconds: 100),
                         child: (_opened)
-                            ? _openedNormalWidget()
+                            ? _openedPlayer(large: false)
                             : _closedNormalWidget(),
                       ),
                     ],

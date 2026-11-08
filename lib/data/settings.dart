@@ -23,6 +23,11 @@ class PlayerSettings extends ChangeNotifier {
     await Future.wait(_pendingWrites.toList());
   }
 
+  void setPreference<T>(String key, T value) {
+    _persist<T>(key, value);
+    notifyListeners();
+  }
+
   Future<void> _write<T>(String key, T value) async {
     try {
       await store.write<T>(key, value);
