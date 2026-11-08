@@ -1,37 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:player/data/settings.dart';
 import 'package:player/l10n/app_localizations.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/ui/core/generic_artwork.dart';
+import 'package:player/ui/settings/settings_controls.dart';
+import 'package:player/ui/settings/settings_section.dart';
+import 'package:provider/provider.dart';
 
-class PlayingScreenSettings extends StatefulWidget {
-  const PlayingScreenSettings({Key? key}) : super(key: key);
-
-  @override
-  PlayingScreenSettingsState createState() => PlayingScreenSettingsState();
-}
-
-class PlayingScreenSettingsState extends State<PlayingScreenSettings> {
+class PlayingScreenSettings extends StatelessWidget {
+  const PlayingScreenSettings({super.key});
   @override
   Widget build(BuildContext context) {
+    final labels = AppLocalizations.of(context)!;
+    final settings = context.watch<PlayerSettings>();
     return SafeArea(
-      top: true,
-      child: SettingsScreen(
-        title: AppLocalizations.of(context)!.playing_screen_sett,
+      child: AdaptiveSettingsScreen(
+        title: labels.playing_screen_sett,
         children: [
-          SettingsGroup(
-            title: AppLocalizations.of(context)!.look_and_feel,
+          SettingsSection(
+            title: labels.look_and_feel,
             children: [
-              DropDownSettingsTile<int>(
-                title: AppLocalizations.of(context)!
-                    .playing_screen_artwork_shape,
-                settingKey: "playing_artwork_shape",
-                selected: ArtworkShape.circle.index,
-                values: <int, String>{
-                  ArtworkShape.circle.index: AppLocalizations.of(context)!
-                      .playing_screen_artwork_shape_circle,
-                  ArtworkShape.square.index: AppLocalizations.of(context)!
-                      .playing_screen_artwork_shape_square,
+              SettingsChoice<int>(
+                title: labels.playing_screen_artwork_shape,
+                value: settings.store.read<int>(
+                  'playing_artwork_shape',
+                  defaultValue: ArtworkShape.circle.index,
+                )!,
+                options: {
+                  ArtworkShape.circle.index:
+                      labels.playing_screen_artwork_shape_circle,
+                  ArtworkShape.square.index:
+                      labels.playing_screen_artwork_shape_square,
                 },
+                onChanged: (value) =>
+                    settings.setPreference('playing_artwork_shape', value),
               ),
             ],
           ),

@@ -28,7 +28,6 @@ dependencies:
   permission_handler: ^12.0.1
   shared_preferences: ^2.0.15
   carousel_slider: ^5.1.2
-  flutter_settings_screens: ^0.3.3-null-safety+2
   package_info_plus: ^4.0.0
   visibility_detector: ^0.4.0+2
   cast: ^2.1.0
@@ -53,13 +52,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^2.0.0
 
-flutter_icons:
-  image_path: "assets/app_icon.png"
-  android: "launcher_icon"
-
 flutter_launcher_icons:
-  android: true
-  image_path: "assets/icon/icon.png"
+  android: "launcher_icon"
+  image_path: "assets/harmony_mark.png"
   min_sdk_android: 21
 
 flutter:
@@ -68,7 +63,6 @@ flutter:
   assets:
     - assets/
     - fonts/
-    - assets/wellcome_screen/
 
   fonts:
     - family: Inter

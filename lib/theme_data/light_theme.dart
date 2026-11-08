@@ -1,28 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:player/theme_data/theme_provider.dart';
+import 'package:player/theme_data/neo_style.dart';
 import 'package:player/theme_data/top_bar_theme.dart';
 
 class LightTheme {
   static ThemeData getTheme(Color primaryColor, TopBarTheme topBarTheme) {
-    return ThemeData(
-      primarySwatch: ThemeProvider.getMaterialColorFromColor(primaryColor),
-      primaryColor: primaryColor,
+    return NeoStyle.theme(
       brightness: Brightness.light,
-      highlightColor: Colors.white70,
-      tabBarTheme: TabBarThemeData(
-        unselectedLabelColor: Colors.grey,
-        labelColor: primaryColor,
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
+      accent: primaryColor,
       appBarTheme: getAppBarTheme(topBarTheme, primaryColor),
     );
   }
 
   static AppBarTheme getAppBarTheme(TopBarTheme theme, Color primaryColor) {
     TextStyle appBarText = const TextStyle(
-      color: Colors.black,
+      color: Color(0xff26364a),
       fontSize: 20,
       fontWeight: FontWeight.w700,
     );
@@ -32,26 +23,32 @@ class LightTheme {
         return AppBarTheme(
           elevation: 0,
           centerTitle: true,
-          backgroundColor: Colors.white,
+          backgroundColor: NeoStyle.lightSurface,
           titleTextStyle: appBarText,
           iconTheme: IconThemeData(color: primaryColor),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: primaryColor, width: 2),
-            borderRadius: BorderRadius.circular(25),
+          shape: const RoundedRectangleBorder(
+            side: BorderSide(color: Color(0xffcad3de)),
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(20),
+            ),
           ),
         );
       case TopBarTheme.squared:
-        return const AppBarTheme(
+        return AppBarTheme(
           centerTitle: true,
-          iconTheme: IconThemeData(color: Colors.white),
+          backgroundColor: NeoStyle.lightSurface,
+          elevation: 0,
+          shape: const Border(bottom: BorderSide(color: Color(0xffcad3de))),
+          titleTextStyle: appBarText,
+          iconTheme: const IconThemeData(color: Color(0xff26364a)),
         );
       case TopBarTheme.seamless:
         return AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: NeoStyle.lightSurface,
           elevation: 0,
-          shadowColor: Colors.white,
+          shadowColor: NeoStyle.lightSurface,
           centerTitle: true,
-          iconTheme: const IconThemeData(color: Colors.black),
+          iconTheme: const IconThemeData(color: Color(0xff26364a)),
           titleTextStyle: appBarText,
         );
     }

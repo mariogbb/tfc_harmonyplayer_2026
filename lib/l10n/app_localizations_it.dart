@@ -88,6 +88,21 @@ class AppLocalizationsIt extends AppLocalizations {
   String get play => 'Riprodurre';
 
   @override
+  String get pause => 'Pausa';
+
+  @override
+  String get previous_track => 'Brano precedente';
+
+  @override
+  String get next_track => 'Brano successivo';
+
+  @override
+  String get shuffle => 'Riproduzione casuale';
+
+  @override
+  String get toggle_like => 'Modifica preferito';
+
+  @override
   String get add_to_queue => 'Aggiungi alla coda';
 
   @override
@@ -245,6 +260,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get show_tab_label => 'Mostra i nomi delle schede';
 
   @override
+  String get show_song_duration => 'Mostra la durata dei brani';
+
+  @override
+  String get invalid_hex_color => 'Inserisci un colore esadecimale valido';
+
+  @override
   String get playing_screen_sett => 'Schermata di riproduzione';
 
   @override
@@ -377,6 +398,18 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get search => 'Ricerca';
+
+  @override
+  String get search_hint => 'Cerca brani, album o artisti';
+
+  @override
+  String get search_prompt => 'Cerca nella tua libreria per iniziare.';
+
+  @override
+  String get search_no_results => 'Nessun risultato. Prova un\'altra ricerca.';
+
+  @override
+  String get search_all => 'Tutti';
 
   @override
   String get nothing_found => 'Non è stato trovato nulla';

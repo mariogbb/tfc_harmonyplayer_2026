@@ -6,7 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:http/http.dart' as http;
 import 'package:player/data/data.dart';
 import 'package:player/data/dao.dart';
@@ -24,19 +23,15 @@ import 'package:player/app/app_resources.dart';
 import 'package:player/data/settings.dart';
 import 'package:player/data/services/settings/settings_store.dart';
 
-/// Initializes platform services and returns whether to show the welcome screen.
-Future<bool> bootstrap() async {
+/// Initializes platform services before displaying the application.
+Future<void> bootstrap() async {
   if (!Platform.isLinux && !Platform.isWindows) {
     await _initializeFirebase();
   }
 
   final prefs = await SharedPreferences.getInstance();
-  await Settings.init();
-  Settings.ensureCacheProvider();
-  final settingsStore = FlutterSettingsStore();
+  final settingsStore = SharedPreferencesSettingsStore(prefs);
   final settings = PlayerSettings(settingsStore);
-
-  final showWelcome = await initializeWelcomePreference(prefs);
 
   await PlayerDatabase.instance.initState();
   final history = SqliteListeningHistoryRepository(
@@ -76,17 +71,6 @@ Future<bool> bootstrap() async {
     httpClient: httpClient,
     settings: settings,
   );
-  return showWelcome;
-}
-
-/// Preserves the existing first-launch preference and returns its initial state.
-Future<bool> initializeWelcomePreference(SharedPreferences prefs) async {
-  final showWelcome = prefs.getInt('initScreen') == null;
-  if (showWelcome) {
-    await prefs.setInt('initScreen', 1);
-  }
-
-  return showWelcome;
 }
 
 Future<void> _initializeFirebase() async {

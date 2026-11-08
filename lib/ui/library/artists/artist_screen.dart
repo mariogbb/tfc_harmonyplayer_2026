@@ -1,360 +1,150 @@
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:player/data/services/artwork/fallback_artwork.dart';
 import 'package:flutter/material.dart';
 import 'package:player/data/data.dart';
-import 'package:player/ui/core/adaptive_layout.dart';
-import 'package:player/ui/playback/control_tab.dart';
-import 'package:player/model/album.dart';
+import 'package:player/l10n/app_localizations.dart';
 import 'package:player/model/artist.dart';
 import 'package:player/model/play_context.dart';
-import 'package:player/model/song.dart';
-import 'package:player/ui/library/artists/artist_album_carusel.dart';
-import 'package:player/ui/core/control_padding.dart';
-import 'package:player/ui/library/songs/song_list.dart';
 import 'package:player/model/sort.dart';
-import 'package:player/l10n/app_localizations.dart';
+import 'package:player/ui/core/control_padding.dart';
+import 'package:player/ui/core/desktop_content_scope.dart';
+import 'package:player/ui/core/detail_header.dart';
+import 'package:player/ui/core/neo_action_button.dart';
+import 'package:player/ui/library/artists/artist_album_carusel.dart';
+import 'package:player/ui/library/songs/song_list.dart';
+import 'package:player/ui/playback/control_tab.dart';
 import 'package:player/utils/extensions.dart';
 
 class ArtistScreen extends StatefulWidget {
-  const ArtistScreen({Key? key}) : super(key: key);
-
+  const ArtistScreen({super.key});
   @override
-  ArtistScreenState createState() => ArtistScreenState();
+  State<ArtistScreen> createState() => _ArtistScreenState();
 }
 
-class ArtistScreenState extends State<ArtistScreen>
-    with AdaptiveElement<ArtistScreen> {
-  int selectedSort = 0;
-  bool ascendant = true;
-
-  List<SortType> sorts = [
-    SortType.alphabetical,
-    SortType.trackNumber,
-    SortType.album,
-  ];
-
-  Widget _artistDetails(BuildContext context, ArtistData artistData) {
-    return ListTile(
-      title: Text(
-        artistData.name,
-        style: Theme.of(context).textTheme.headlineMedium!
-            .copyWith(fontFamily: "Inter", fontWeight: FontWeight.w700),
-      ),
-      subtitle: Text(
-        "${artistData.songList.length} ${AppLocalizations.of(context)!.plural_songs} . ${artistData.albumList.length} albums . ${artistData.duration.toStringRepresentation()}",
-      ),
-    );
-  }
-
-  Widget _artistImage(ArtistData artistData, Axis orientation) {
-    return Padding(
-      padding: const EdgeInsets.all(15),
-      child: Hero(
-        tag: "artistHero${artistData.id}",
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: (artistData.imageURL == null)
-              ? Image.asset(
-                  "assets/no_artwork_icon.png",
-                  fit: (orientation == Axis.vertical)
-                      ? BoxFit.fitWidth
-                      : BoxFit.fitHeight,
-                )
-              : CachedNetworkImage(
-                  imageUrl: artistData.imageURL!,
-                  width: MediaQuery.of(context).size.width * 0.1,
-                  cacheKey: artistData.id.toString(),
-                  fit: (orientation == Axis.vertical)
-                      ? BoxFit.fitWidth
-                      : BoxFit.fitHeight,
-                ),
-        ),
-      ),
-    );
-  }
-
-  Widget randomButton(ArtistData artistData) {
-    return OutlinedButton.icon(
-      icon: const Icon(Icons.shuffle),
-      style: ButtonStyle(
-        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18.0),
-            side: BorderSide(color: Theme.of(context).primaryColor),
-          ),
-        ),
-      ),
-      onPressed: () {
-        Random rnd = Random();
-
-        PlayerData.instance.handler.playSongList(
-          PlayingContext(
-            artistData.name,
-            ContextType.artist,
-            artistData.songList,
-          ),
-          rnd.nextInt(artistData.songList.length),
-        );
-        PlayerData.instance.handler.switchShuffleMode(true);
-      },
-      label: Text(AppLocalizations.of(context)!.shuffle_play),
-    );
-  }
-
+class _ArtistScreenState extends State<ArtistScreen> {
+  SortType sort = SortType.alphabetical;
   @override
-  Widget buildLarge(BuildContext context) {
-    ArtistData artistData =
-        ModalRoute.of(context)!.settings.arguments as ArtistData;
-
-    List<AlbumData> albums = artistData.albumList;
-    List<SongData> songs = artistData.songList;
-
-    // Will be neccesary
-    // final ScrollController controller =
-    //    ScrollController(keepScrollOffset: false, initialScrollOffset: 0);
-
+  Widget build(BuildContext context) {
+    final artist = ModalRoute.of(context)!.settings.arguments as ArtistData;
+    final songs = artist.songList;
+    final albums = artist.albumList;
+    final labels = AppLocalizations.of(context)!;
+    final placeholder = Image.memory(fallbackArtwork, fit: BoxFit.cover);
     return SafeArea(
-      top: true,
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        bottomSheet: PlayerControlTab(),
-        body: SafeArea(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    Stack(
-                      fit: StackFit.passthrough,
-                      children: [
-                        _artistImage(artistData, Axis.horizontal),
-                        Positioned(
-                          top: 20,
-                          left: 20,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.arrow_back_ios_new_sharp,
-                                color: Colors.white,
-                              ),
-                              onPressed: () => Navigator.of(context).pop(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: randomButton(artistData),
-                    ),
-                  ],
+        appBar: DesktopContentScope.isActive(context)
+            ? null
+            : AppBar(
+                title: Text(
+                  artist.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Expanded(
-                flex: 6,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: _artistDetails(context, artistData),
+        bottomSheet: DesktopContentScope.isActive(context)
+            ? null
+            : PlayerControlTab(),
+        body: ControlPadding(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: ListView(
+                children: [
+                  DetailHeader(
+                    title: artist.name,
+                    subtitle:
+                        '${songs.length} ${labels.plural_songs} · ${albums.length} ${labels.albums_plural} · ${artist.duration.toStringRepresentation()}',
+                    artwork: Hero(
+                      tag: 'artistHero${artist.id}',
+                      child: artist.imageURL == null
+                          ? placeholder
+                          : CachedNetworkImage(
+                              imageUrl: artist.imageURL!,
+                              fit: BoxFit.cover,
+                              placeholder: (_, _) => placeholder,
+                              errorWidget: (_, _, _) => placeholder,
+                            ),
                     ),
+                    action: NeoActionButton(
+                      onPressed: songs.isEmpty
+                          ? null
+                          : () {
+                              PlayerData.instance.handler.playSongList(
+                                PlayingContext(
+                                  artist.name,
+                                  ContextType.artist,
+                                  songs,
+                                ),
+                                Random().nextInt(songs.length),
+                              );
+                              PlayerData.instance.handler.switchShuffleMode(
+                                true,
+                              );
+                            },
+                      icon: Icons.shuffle,
+                      label: labels.shuffle_play,
+                    ),
+                  ),
+                  if (albums.isNotEmpty) ...[
                     ListTile(
                       title: Text(
-                        AppLocalizations.of(context)!.albums_plural,
+                        labels.albums_plural,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
+                      trailing: Text('${albums.length}'),
                     ),
                     SizedBox(
                       height: 155,
                       child: ListView.builder(
-                        itemCount: albums.length,
                         scrollDirection: Axis.horizontal,
-                        itemBuilder: (context, index) {
-                          return AlbumCarouselContainer(data: albums[index]);
-                        },
+                        itemCount: albums.length,
+                        itemBuilder: (context, index) =>
+                            AlbumCarouselContainer(data: albums[index]),
                       ),
                     ),
-                    ListTile(
-                      title: Text(
-                        AppLocalizations.of(context)!.plural_songs,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      trailing: DropdownButton<int>(
-                        onChanged: (value) {
-                          setState(() {
-                            selectedSort = value ?? 0;
-                          });
-                        },
-                        value: selectedSort,
-                        borderRadius: BorderRadius.circular(15),
-                        items: [
-                          const DropdownMenuItem<int>(
-                            value: 0,
-                            child: Text("A - Z"),
-                          ),
-                          DropdownMenuItem<int>(
-                            value: 1,
-                            child: Text(
-                              AppLocalizations.of(context)!.track_number_sort,
-                            ),
-                          ),
-                          DropdownMenuItem<int>(
-                            value: 2,
-                            child: Text(AppLocalizations.of(context)!.album),
-                          ),
-                        ],
-                      ),
+                  ],
+                  ListTile(
+                    title: Text(
+                      labels.plural_songs,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SongList(
-                          playingContext: PlayingContext(
-                            artistData.name,
-                            ContextType.artist,
-                            songs,
-                          ),
-                          sort: SongSort(
-                            ascendent: ascendant,
-                            type: sorts[selectedSort],
-                          ),
-                          showArtistLabel: false,
-                          physics: const ClampingScrollPhysics(),
-                          shrinkWrap: true,
+                    trailing: DropdownButton<SortType>(
+                      value: sort,
+                      onChanged: (value) {
+                        if (value != null) setState(() => sort = value);
+                      },
+                      items: [
+                        const DropdownMenuItem(
+                          value: SortType.alphabetical,
+                          child: Text('A - Z'),
+                        ),
+                        DropdownMenuItem(
+                          value: SortType.trackNumber,
+                          child: Text(labels.track_number_sort),
+                        ),
+                        DropdownMenuItem(
+                          value: SortType.album,
+                          child: Text(labels.album),
                         ),
                       ],
                     ),
-                    const ListTile(),
-                  ],
-                ),
+                  ),
+                  SongList(
+                    playingContext: PlayingContext(
+                      artist.name,
+                      ContextType.artist,
+                      songs,
+                    ),
+                    sort: SongSort(ascendent: true, type: sort),
+                    showArtistLabel: false,
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget buildNormal(BuildContext context) {
-    ArtistData artistData =
-        ModalRoute.of(context)!.settings.arguments as ArtistData;
-
-    List<AlbumData> albums = artistData.albumList;
-    List<SongData> songs = artistData.songList;
-
-    final ScrollController controller = ScrollController(
-      keepScrollOffset: false,
-      initialScrollOffset: 0,
-    );
-
-    return SafeArea(
-      top: true,
-      child: Scaffold(
-        appBar: AppBar(actions: const [], title: Text(artistData.model.artist)),
-        extendBodyBehindAppBar: true,
-        bottomSheet: PlayerControlTab(),
-        body: ControlPadding(
-          child: SafeArea(
-            child: ListView(
-              controller: controller,
-              children: [
-                _artistImage(artistData, Axis.vertical),
-                ListTile(
-                  title: Text(
-                    artistData.name,
-                    style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                      fontFamily: "Inter",
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  subtitle: Text(
-                    "${songs.length} ${AppLocalizations.of(context)!.plural_songs} . ${albums.length} albums . ${artistData.duration.toStringRepresentation()}",
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  child: randomButton(artistData),
-                ),
-                ListTile(
-                  title: Text(
-                    AppLocalizations.of(context)!.albums_plural,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                SizedBox(
-                  height: 155,
-                  child: ListView.builder(
-                    itemCount: albums.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return AlbumCarouselContainer(data: albums[index]);
-                    },
-                  ),
-                ),
-                ListTile(
-                  title: Text(
-                    AppLocalizations.of(context)!.plural_songs,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  trailing: DropdownButton<int>(
-                    onChanged: (value) {
-                      setState(() {
-                        selectedSort = value ?? 0;
-                      });
-                    },
-                    value: selectedSort,
-                    borderRadius: BorderRadius.circular(15),
-                    items: [
-                      const DropdownMenuItem<int>(
-                        value: 0,
-                        child: Text("A - Z"),
-                      ),
-                      DropdownMenuItem<int>(
-                        value: 1,
-                        child: Text(
-                          AppLocalizations.of(context)!.track_number_sort,
-                        ),
-                      ),
-                      DropdownMenuItem<int>(
-                        value: 2,
-                        child: Text(AppLocalizations.of(context)!.album),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SongList(
-                      playingContext: PlayingContext(
-                        artistData.name,
-                        ContextType.artist,
-                        songs,
-                      ),
-                      sort: SongSort(
-                        ascendent: ascendant,
-                        type: sorts[selectedSort],
-                      ),
-                      showArtistLabel: false,
-                      physics: const ClampingScrollPhysics(),
-                      shrinkWrap: true,
-                    ),
-                  ],
-                ),
-              ],
             ),
           ),
         ),

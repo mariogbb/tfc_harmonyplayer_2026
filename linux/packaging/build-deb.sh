@@ -45,7 +45,7 @@ cp -a "$bundle/." "$stage/usr/lib/harmony-player/"
 # runtime package ships libsqlite3.so.0. Keep the compatibility link private.
 ln -s "/usr/lib/$multiarch/libsqlite3.so.0" "$stage/usr/lib/harmony-player/lib/libsqlite3.so"
 install -m 644 linux/packaging/harmony-player.desktop "$stage/usr/share/applications/"
-install -m 644 assets/app_icon.png "$stage/usr/share/pixmaps/harmony-player.png"
+install -m 644 assets/harmony_mark.png "$stage/usr/share/pixmaps/harmony-player.png"
 cat > "$stage/usr/bin/harmony-player" <<'EOF'
 #!/bin/sh
 export LD_LIBRARY_PATH="/usr/lib/harmony-player/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"

@@ -8,6 +8,8 @@ import 'package:player/l10n/app_localizations.dart';
 import 'package:player/utils/extensions.dart';
 import 'package:player/ui/core/generic_artwork.dart';
 import 'package:provider/provider.dart';
+import 'package:player/ui/core/library_row.dart';
+import 'package:player/ui/library/library_controller.dart';
 
 class SongListItem extends StatefulWidget {
   final SongData data;
@@ -94,9 +96,10 @@ class SongListItemState extends State<SongListItem> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<LibraryController?>();
     ArtworkShape shape = ArtworkShape.square;
 
-    int? index = context.read<PlayerSettings>().store.read<int>(
+    int? index = context.watch<PlayerSettings>().store.read<int>(
       "song_artwork_shape",
     );
 
@@ -104,108 +107,111 @@ class SongListItemState extends State<SongListItem> {
       shape = ArtworkShape.values[index];
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: (() => {widget.play(widget.data)}),
-      child: ListTile(
-        leading: (widget.ranking != -1)
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 15),
-                    child: Text(
-                      "${widget.ranking}",
-                      style: Theme.of(context).textTheme.titleMedium,
+    return LibraryRow(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: (() => {widget.play(widget.data)}),
+        child: ListTile(
+          leading: (widget.ranking != -1)
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 15),
+                      child: Text(
+                        "${widget.ranking}",
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ),
-                  ),
-                  GenericArtwork(
-                    type: ArtworkType.song,
-                    shape: shape,
-                    elementId: widget.data.id,
-                    artwork: widget.data.artwork,
-                  ),
-                ],
-              )
-            : (widget.showAlbum)
-            ? Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Text(widget.data.trackNum.toString()),
-              )
-            : GenericArtwork(
-                type: ArtworkType.song,
-                shape: shape,
-                elementId: widget.data.id,
-                artwork: widget.data.artwork,
-              ),
-        title: Text(
-          widget.data.title,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: (_playing) ? Theme.of(context).primaryColor : null,
-            fontFamily: "Roboto",
-          ),
-        ),
-        subtitle: (widget.showArtistLabel)
-            ? Text(
-                widget.data.artist,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: Theme.of(context).textTheme.titleSmall!.copyWith(
-                  color: (_playing)
-                      ? Theme.of(context).primaryColor
-                      : Theme.of(context).unselectedWidgetColor,
+                    GenericArtwork(
+                      type: ArtworkType.song,
+                      shape: shape,
+                      elementId: widget.data.id,
+                      artwork: widget.data.artwork,
+                      imageUrl: widget.data.albumModel.imageURL,
+                    ),
+                  ],
+                )
+              : (widget.showAlbum)
+              ? Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Text(widget.data.trackNum.toString()),
+                )
+              : GenericArtwork(
+                  type: ArtworkType.song,
+                  shape: shape,
+                  elementId: widget.data.id,
+                  artwork: widget.data.artwork,
+                  imageUrl: widget.data.albumModel.imageURL,
                 ),
-              )
-            : null,
-        trailing: Consumer<PlayerSettings>(
-          builder: (context, value, child) {
-            Widget popup = PopupMenuButton<int>(
-              elevation: 5,
-              itemBuilder: (context) {
-                return _contextualOptions();
-              },
-              onSelected: (value) {
-                switch (value) {
-                  case 1:
-                    SongDialogs.addToPlaylistDialog(widget.data, context);
-                    break;
+          title: Text(
+            widget.data.title,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: (_playing) ? Theme.of(context).primaryColor : null,
+            ),
+          ),
+          subtitle: (widget.showArtistLabel)
+              ? Text(
+                  widget.data.artist,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                    color: (_playing)
+                        ? Theme.of(context).primaryColor
+                        : Theme.of(context).unselectedWidgetColor,
+                  ),
+                )
+              : null,
+          trailing: Consumer<PlayerSettings>(
+            builder: (context, value, child) {
+              Widget popup = PopupMenuButton<int>(
+                elevation: 5,
+                itemBuilder: (context) {
+                  return _contextualOptions();
+                },
+                onSelected: (value) {
+                  switch (value) {
+                    case 1:
+                      SongDialogs.addToPlaylistDialog(widget.data, context);
+                      break;
 
-                  case 2:
-                    widget.handler.addToQueue(widget.data);
-                    break;
+                    case 2:
+                      widget.handler.addToQueue(widget.data);
+                      break;
 
-                  case 3:
-                    Navigator.of(
-                      context,
-                    ).pushNamed('artist', arguments: widget.data.artistModel);
-                    break;
+                    case 3:
+                      Navigator.of(
+                        context,
+                      ).pushNamed('artist', arguments: widget.data.artistModel);
+                      break;
 
-                  case 4:
-                    Navigator.pushNamed(
-                      context,
-                      "album",
-                      arguments: widget.data.albumModel,
-                    );
-                    break;
-                }
-              },
-              icon: const Icon(Icons.more_vert),
-            );
-
-            if (value.isShowSongTimeLabel) {
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(widget.data.duration.toStringRepresentation()),
-                  popup,
-                ],
+                    case 4:
+                      Navigator.pushNamed(
+                        context,
+                        "album",
+                        arguments: widget.data.albumModel,
+                      );
+                      break;
+                  }
+                },
+                icon: const Icon(Icons.more_vert),
               );
-            }
 
-            return popup;
-          },
+              if (value.isShowSongTimeLabel) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(widget.data.duration.toStringRepresentation()),
+                    popup,
+                  ],
+                );
+              }
+
+              return popup;
+            },
+          ),
         ),
       ),
     );

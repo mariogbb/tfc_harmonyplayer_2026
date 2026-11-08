@@ -258,6 +258,36 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get play;
 
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @previous_track.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous track'**
+  String get previous_track;
+
+  /// No description provided for @next_track.
+  ///
+  /// In en, this message translates to:
+  /// **'Next track'**
+  String get next_track;
+
+  /// No description provided for @shuffle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffle'**
+  String get shuffle;
+
+  /// No description provided for @toggle_like.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle liked song'**
+  String get toggle_like;
+
   /// No description provided for @add_to_queue.
   ///
   /// In en, this message translates to:
@@ -564,6 +594,18 @@ abstract class AppLocalizations {
   /// **'Show tabs label'**
   String get show_tab_label;
 
+  /// No description provided for @show_song_duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Show song duration'**
+  String get show_song_duration;
+
+  /// No description provided for @invalid_hex_color.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid hex color'**
+  String get invalid_hex_color;
+
   /// No description provided for @playing_screen_sett.
   ///
   /// In en, this message translates to:
@@ -821,6 +863,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search'**
   String get search;
+
+  /// No description provided for @search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search songs, albums or artists'**
+  String get search_hint;
+
+  /// No description provided for @search_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your library to get started.'**
+  String get search_prompt;
+
+  /// No description provided for @search_no_results.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found. Try a different search.'**
+  String get search_no_results;
+
+  /// No description provided for @search_all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get search_all;
 
   /// No description provided for @nothing_found.
   ///

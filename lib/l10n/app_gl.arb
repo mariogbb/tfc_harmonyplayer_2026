@@ -27,6 +27,11 @@
 	"albums_plural": "Álbums",
 
 	"play": "Reproducir",
+	"pause": "Pausar",
+	"previous_track": "Canción anterior",
+	"next_track": "Seguinte canción",
+	"shuffle": "Aleatorio",
+	"toggle_like": "Cambiar favorito",
 	"add_to_queue": "Añadir a la cola",
 	"open_artist": "Ver artista",
 	"open_album": "Ver álbum",
@@ -87,6 +92,8 @@
 
 	"tabs": "Tabs",
 	"show_tab_label": "Mostrar nome das tabs",
+	"show_song_duration": "Mostrar duración das cancións",
+	"invalid_hex_color": "Introduce unha cor hexadecimal válida",
 
 	"playing_screen_sett": "Pantalla de reproducción",
 	"playing_screen_sett_desc": "Apariencia da pantalla de reproducción e comportamiento",
@@ -141,6 +148,10 @@
 	"title": "Título",
 	"sort_by": "Ordenar por",
 	"search": "Búsqueda",
+	"search_hint": "Busca cancións, álbums ou artistas",
+	"search_prompt": "Busca na túa biblioteca para comezar.",
+	"search_no_results": "Non hai resultados. Proba outra busca.",
+	"search_all": "Todo",
 	"nothing_found": "Non se atopou nada",
 	"pick_a_color": "Escolle unha cor",
 	"library_load_error": "Non se puido cargar a biblioteca musical. Tenta recargala.",

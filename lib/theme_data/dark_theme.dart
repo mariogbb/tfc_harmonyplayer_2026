@@ -1,32 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:player/theme_data/theme_provider.dart';
+import 'package:player/theme_data/neo_style.dart';
 import 'package:player/theme_data/top_bar_theme.dart';
 
 class DarkTheme {
-  static const Color _backgroundColor = Color.fromRGBO(18, 18, 18, 1);
+  static const Color _backgroundColor = NeoStyle.darkSurface;
 
   static ThemeData getTheme(Color primaryColor, TopBarTheme topBarTheme) {
-    return ThemeData(
-      primarySwatch: ThemeProvider.getMaterialColorFromColor(primaryColor),
-      primaryColor: primaryColor,
+    if (primaryColor == NeoStyle.defaultAccent) {
+      primaryColor = NeoStyle.darkDefaultAccent;
+    }
+    return NeoStyle.theme(
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: _backgroundColor,
-      canvasColor: _backgroundColor,
-      highlightColor: primaryColor,
-      tabBarTheme: TabBarThemeData(
-        unselectedLabelColor: Colors.grey[700],
-        labelColor: primaryColor,
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
+      accent: primaryColor,
       appBarTheme: getAppBarTheme(topBarTheme, primaryColor),
     );
   }
 
   static AppBarTheme getAppBarTheme(TopBarTheme theme, Color primaryColor) {
-    TextStyle appBarText = TextStyle(
-      color: primaryColor,
+    TextStyle appBarText = const TextStyle(
+      color: Color(0xffe6edf6),
       fontSize: 20,
       fontWeight: FontWeight.w700,
     );
@@ -39,23 +31,30 @@ class DarkTheme {
           backgroundColor: _backgroundColor,
           titleTextStyle: appBarText,
           iconTheme: IconThemeData(color: primaryColor),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: primaryColor, width: 2),
-            borderRadius: BorderRadius.circular(15),
+          shape: const RoundedRectangleBorder(
+            side: BorderSide(color: Color(0xff3c4757)),
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(20),
+            ),
           ),
         );
       case TopBarTheme.squared:
         return AppBarTheme(
           centerTitle: true,
-          backgroundColor: primaryColor.withAlpha(50),
-          iconTheme: IconThemeData(color: primaryColor),
+          backgroundColor: _backgroundColor,
+          elevation: 0,
+          titleTextStyle: appBarText,
+          iconTheme: const IconThemeData(color: Color(0xffe6edf6)),
+          shape: const Border(bottom: BorderSide(color: Color(0xff3c4757))),
         );
       case TopBarTheme.seamless:
         return AppBarTheme(
           elevation: 0,
-          shadowColor: _backgroundColor.withAlpha(100),
-          backgroundColor: _backgroundColor.withAlpha(100),
+          shadowColor: _backgroundColor,
+          backgroundColor: _backgroundColor,
           centerTitle: true,
+          titleTextStyle: appBarText,
+          iconTheme: const IconThemeData(color: Color(0xffe6edf6)),
         );
     }
   }

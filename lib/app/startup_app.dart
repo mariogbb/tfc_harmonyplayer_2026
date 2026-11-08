@@ -11,22 +11,21 @@ class StartupApp extends StatefulWidget {
     this.appBuilder = _buildApp,
   });
 
-  final Future<bool> Function() initialize;
-  final Widget Function(bool showWelcome) appBuilder;
+  final Future<void> Function() initialize;
+  final Widget Function() appBuilder;
 
-  static Widget _buildApp(bool showWelcome) =>
-      HarmonyApp(showWelcome: showWelcome);
+  static Widget _buildApp() => const HarmonyApp();
 
   @override
   State<StartupApp> createState() => _StartupAppState();
 }
 
 class _StartupAppState extends State<StartupApp> {
-  late final Future<bool> _initialization = _initialize();
+  late final Future<void> _initialization = _initialize();
 
-  Future<bool> _initialize() async {
+  Future<void> _initialize() async {
     try {
-      return await widget.initialize();
+      await widget.initialize();
     } catch (error, stack) {
       FlutterError.reportError(
         FlutterErrorDetails(
@@ -41,10 +40,13 @@ class _StartupAppState extends State<StartupApp> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<bool>(
+    return FutureBuilder<void>(
       future: _initialization,
       builder: (context, snapshot) {
-        if (snapshot.hasData) return widget.appBuilder(snapshot.requireData);
+        if (snapshot.connectionState == ConnectionState.done &&
+            !snapshot.hasError) {
+          return widget.appBuilder();
+        }
         return MaterialApp(
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,

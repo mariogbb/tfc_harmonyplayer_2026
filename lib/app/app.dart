@@ -20,9 +20,7 @@ import 'dart:async';
 import 'package:player/app/app_resources.dart';
 
 class HarmonyApp extends StatefulWidget {
-  const HarmonyApp({super.key, required this.showWelcome});
-
-  final bool showWelcome;
+  const HarmonyApp({super.key});
 
   @override
   State<HarmonyApp> createState() => _HarmonyAppState();
@@ -66,7 +64,7 @@ class _HarmonyAppState extends State<HarmonyApp> {
         ChangeNotifierProvider.value(value: AppResources.instance.settings),
       ],
       child: Consumer2<ThemeProvider, PlayerSettings>(
-        child: HomePage(showWelcome: widget.showWelcome),
+        child: HomePage(),
         builder: (context, themeValue, settingsValue, child) {
           return MaterialApp(
             themeMode: themeValue.selectedThemeMode,

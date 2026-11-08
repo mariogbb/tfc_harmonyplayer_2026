@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class GenericArtwork extends StatelessWidget {
   final ArtworkType type;
@@ -8,6 +9,7 @@ class GenericArtwork extends StatelessWidget {
   final int elementId;
   final Uint8List artwork;
   final BoxFit? fit;
+  final String? imageUrl;
 
   const GenericArtwork({
     Key? key,
@@ -16,6 +18,7 @@ class GenericArtwork extends StatelessWidget {
     required this.elementId,
     required this.artwork,
     this.fit,
+    this.imageUrl,
   }) : super(key: key);
 
   @override
@@ -28,34 +31,29 @@ class GenericArtwork extends StatelessWidget {
       heroId = "artistHero$elementId";
     }
 
-    return (heroId == "")
-        ? (shape == ArtworkShape.circle)
-              ? ClipOval(
-                  child: Image.memory(artwork, fit: fit ?? BoxFit.fitWidth),
-                )
-              : ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(7.5)),
-                  child: Image.memory(
-                    artwork,
-                    width: 40,
-                    fit: fit ?? BoxFit.fitWidth,
-                  ),
-                )
-        : Hero(
-            tag: heroId,
-            child: (shape == ArtworkShape.circle)
-                ? ClipOval(
-                    child: Image.memory(artwork, fit: fit ?? BoxFit.fitWidth),
-                  )
-                : ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(7.5)),
-                    child: Image.memory(
-                      artwork,
-                      width: 40,
-                      fit: fit ?? BoxFit.fitWidth,
-                    ),
-                  ),
+    final imageFit = fit ?? BoxFit.fitWidth;
+    Widget fallback() => Image.memory(
+      artwork,
+      width: shape == ArtworkShape.square ? 40 : null,
+      fit: imageFit,
+    );
+    final url = imageUrl;
+    final image = url == null || url.isEmpty
+        ? fallback()
+        : CachedNetworkImage(
+            imageUrl: url,
+            width: shape == ArtworkShape.square ? 40 : null,
+            fit: imageFit,
+            placeholder: (_, _) => fallback(),
+            errorWidget: (_, _, _) => fallback(),
           );
+    final clipped = shape == ArtworkShape.circle
+        ? ClipOval(child: image)
+        : ClipRRect(
+            borderRadius: const BorderRadius.all(Radius.circular(7.5)),
+            child: image,
+          );
+    return heroId.isEmpty ? clipped : Hero(tag: heroId, child: clipped);
   }
 }
 

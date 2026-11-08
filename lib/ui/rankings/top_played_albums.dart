@@ -8,6 +8,7 @@ import 'package:player/l10n/app_localizations.dart';
 import 'package:player/model/top_recopilations.dart';
 import 'package:player/ui/library/albums/album_list_item.dart';
 import 'package:player/ui/core/control_padding.dart';
+import 'package:player/ui/core/desktop_content_scope.dart';
 
 class TopAlbumsRanking extends StatefulWidget {
   const TopAlbumsRanking({Key? key}) : super(key: key);
@@ -61,9 +62,12 @@ class TopAlbumsRankingState extends State<TopAlbumsRanking> {
     return SafeArea(
       top: true,
       child: Scaffold(
-        extendBodyBehindAppBar: true,
-        bottomSheet: PlayerControlTab(),
-        appBar: AppBar(actions: const [], title: const Text("")),
+        bottomSheet: DesktopContentScope.isActive(context)
+            ? null
+            : PlayerControlTab(),
+        appBar: DesktopContentScope.isActive(context)
+            ? null
+            : AppBar(title: Text(AppLocalizations.of(context)!.top_albums)),
         body: ControlPadding(
           child: ListView(
             children: [

@@ -27,6 +27,11 @@
 	"albums_plural": "Albums",
 
 	"play": "Play",
+	"pause": "Pause",
+	"previous_track": "Previous track",
+	"next_track": "Next track",
+	"shuffle": "Shuffle",
+	"toggle_like": "Toggle liked song",
 	"add_to_queue": "Add to queue",
 	"open_artist": "Open artist",
 	"open_album": "Open album",
@@ -87,6 +92,8 @@
 
 	"tabs": "Tabs",
 	"show_tab_label": "Show tabs label",
+	"show_song_duration": "Show song duration",
+	"invalid_hex_color": "Enter a valid hex color",
 
 	"playing_screen_sett": "Playing screen",
 	"playing_screen_sett_desc": "Playing screen look and feel and behaviour",
@@ -141,6 +148,10 @@
 	"title": "Title",
 	"sort_by": "Sort by",
 	"search": "Search",
+	"search_hint": "Search songs, albums or artists",
+	"search_prompt": "Search your library to get started.",
+	"search_no_results": "No matches found. Try a different search.",
+	"search_all": "All",
 	"nothing_found": "Nothing found",
 	"pick_a_color": "Pick a color",
 	"library_load_error": "Unable to load the music library. Try reloading.",

@@ -1,52 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:player/l10n/app_localizations.dart';
-import 'package:flutter_settings_screens/flutter_settings_screens.dart';
 import 'package:player/data/settings.dart';
+import 'package:player/l10n/app_localizations.dart';
+import 'package:player/ui/settings/settings_controls.dart';
+import 'package:player/ui/settings/settings_section.dart';
 import 'package:provider/provider.dart';
 
-class AppGeneralSettingsScreen extends StatefulWidget {
-  const AppGeneralSettingsScreen({Key? key}) : super(key: key);
+class AppGeneralSettingsScreen extends StatelessWidget {
+  const AppGeneralSettingsScreen({super.key});
 
-  @override
-  AppGeneralSettingsScreenState createState() =>
-      AppGeneralSettingsScreenState();
-}
-
-class AppGeneralSettingsScreenState extends State<AppGeneralSettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    TextStyle titleStyle = Theme.of(context).textTheme.headlineSmall!
-        .copyWith(color: Theme.of(context).primaryColor);
-
+    final labels = AppLocalizations.of(context)!;
+    final settings = context.watch<PlayerSettings>();
     return SafeArea(
-      top: true,
-      child: SettingsScreen(
-        title: AppLocalizations.of(context)!.look_and_feel,
+      child: AdaptiveSettingsScreen(
+        title: labels.app_sett,
         children: [
-          SettingsGroup(
-            titleTextStyle: titleStyle,
-            title: AppLocalizations.of(context)!.general_settings,
+          SettingsSection(
+            title: labels.general_settings,
             children: [
-              Consumer<PlayerSettings>(
-                builder: (context, value, child) {
-                  List<Locale> locales = AppLocalizations.supportedLocales;
-
-                  return DropDownSettingsTile<String>(
-                    leading: const Icon(Icons.translate),
-                    title: AppLocalizations.of(context)!.language_sett,
-                    settingKey: "language",
-                    selected: (value.getAppLocale != null)
-                        ? value.getAppLocale!.languageCode
-                        : "en",
-                    onChange: (p0) {
-                      value.setLocale(Locale.fromSubtags(languageCode: p0));
-                    },
-                    values: {
-                      for (var element in locales)
-                        element.languageCode: element.languageCode,
-                    },
-                  );
+              SettingsChoice<String>(
+                title: labels.language_sett,
+                value: settings.getAppLocale?.languageCode ?? 'en',
+                options: {
+                  for (final locale in AppLocalizations.supportedLocales)
+                    locale.languageCode: locale.languageCode,
                 },
+                onChanged: (value) => settings.setLocale(Locale(value)),
               ),
             ],
           ),

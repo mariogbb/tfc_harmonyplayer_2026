@@ -88,6 +88,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get play => 'Play';
 
   @override
+  String get pause => 'Pause';
+
+  @override
+  String get previous_track => 'Previous track';
+
+  @override
+  String get next_track => 'Next track';
+
+  @override
+  String get shuffle => 'Shuffle';
+
+  @override
+  String get toggle_like => 'Toggle liked song';
+
+  @override
   String get add_to_queue => 'Add to queue';
 
   @override
@@ -243,6 +258,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get show_tab_label => 'Show tabs label';
 
   @override
+  String get show_song_duration => 'Show song duration';
+
+  @override
+  String get invalid_hex_color => 'Enter a valid hex color';
+
+  @override
   String get playing_screen_sett => 'Playing screen';
 
   @override
@@ -373,6 +394,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get search => 'Search';
+
+  @override
+  String get search_hint => 'Search songs, albums or artists';
+
+  @override
+  String get search_prompt => 'Search your library to get started.';
+
+  @override
+  String get search_no_results => 'No matches found. Try a different search.';
+
+  @override
+  String get search_all => 'All';
 
   @override
   String get nothing_found => 'Nothing found';

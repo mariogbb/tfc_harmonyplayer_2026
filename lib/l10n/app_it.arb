@@ -27,6 +27,11 @@
 	"albums_plural": "Album",
 
 	"play": "Riprodurre",
+	"pause": "Pausa",
+	"previous_track": "Brano precedente",
+	"next_track": "Brano successivo",
+	"shuffle": "Riproduzione casuale",
+	"toggle_like": "Modifica preferito",
 	"add_to_queue": "Aggiungi alla coda",
 	"open_artist": "Vedi artista",
 	"open_album": "Vedi album",
@@ -87,6 +92,8 @@
 
 	"tabs": "Schede",
 	"show_tab_label": "Mostra i nomi delle schede",
+	"show_song_duration": "Mostra la durata dei brani",
+	"invalid_hex_color": "Inserisci un colore esadecimale valido",
 
 	"playing_screen_sett": "Schermata di riproduzione",
 	"playing_screen_sett_desc": "Aspetto e comportamento della schermata di riproduzione",
@@ -141,6 +148,10 @@
 	"title": "Titolo",
 	"sort_by": "Ordina per",
 	"search": "Ricerca",
+	"search_hint": "Cerca brani, album o artisti",
+	"search_prompt": "Cerca nella tua libreria per iniziare.",
+	"search_no_results": "Nessun risultato. Prova un'altra ricerca.",
+	"search_all": "Tutti",
 	"nothing_found": "Non è stato trovato nulla",
 	"pick_a_color": "Scegliere un colore",
 	"library_load_error": "Impossibile caricare la libreria musicale. Prova a ricaricare.",
